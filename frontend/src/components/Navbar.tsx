@@ -7,7 +7,7 @@ import { hstack } from "@/styled-system/patterns";
 const Navbar: React.FC = () => {
 
   return (
-    <div className={css({ borderBottomWidth: "2px", borderColor: "red.dark.3", display: "flex", alignItems: "center", minH: "60px", px: "20px", justifyContent: "center" })}>
+    <div className={css({ borderBottomWidth: "2px", display: "flex", alignItems: "center", minH: "60px", px: "20px", justifyContent: "center" })}>
       <div className={css({ justifyContent: "space-between", maxW: "1920px", w: "full", display: "flex" })}>
         <div className={hstack({ gap: "5px" })}>
           <CrosshairIcon size={"25px"} />
@@ -16,7 +16,7 @@ const Navbar: React.FC = () => {
 
         <div className={hstack({ gap: "5px" })}>
           <Link href="/dashboard">
-            <Button backgroundColor={"red.dark.3"}>
+            <Button>
               <span className={css({ display: { md: "block", base: "none" } })}>Get Started</span>
               <ArrowRightIcon />
             </Button>

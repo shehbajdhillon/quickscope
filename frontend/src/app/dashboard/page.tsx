@@ -60,14 +60,12 @@ const NewMonitorCard = () => {
   return (
     <Link href="/new">
       <Card className={css({
-        borderColor: "red.dark.3",
-        backgroundColor: "mauve.5",
         borderWidth: "1px",
         w: { base: "330px", md: "360px" },
         h: { base: "215.63px", md: "232.5px"},
       })}>
         <CardBody>
-          <Center h="full" color={"red.dark.3"}>
+          <Center h="full">
             <PlusIcon size={"30px"} />
             <text className={css({ fontWeight: "medium", fontSize: "25px" })}>New Monitor</text>
           </Center>
@@ -80,8 +78,6 @@ const NewMonitorCard = () => {
 const MonitorCard = () => {
   return (
     <Card className={css({
-      borderColor: "red.dark.3",
-      backgroundColor: "mauve.5",
       borderWidth: "1px",
       w: { base: "330px", md: "360px" },
       h: { base: "215.63px", md: "232.5px"},
@@ -97,8 +93,8 @@ const MonitorCard = () => {
       </CardBody>
 
       <CardFooter gap="3">
-        <Button variant="outline" color="red.dark.3" borderColor="red.dark.3">Cancel</Button>
-        <Button backgroundColor="red.dark.3">Invite</Button>
+        <Button variant="outline">Cancel</Button>
+        <Button>Invite</Button>
       </CardFooter>
 
     </Card>

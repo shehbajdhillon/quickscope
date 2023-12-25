@@ -1712,147 +1712,147 @@ const tokens = {
     "variable": "var(--colors-grass-dark-a12)"
   },
   "colors.gray.light.1": {
-    "value": "#fdfcfd",
+    "value": "#fcfcfc",
     "variable": "var(--colors-gray-light-1)"
   },
   "colors.gray.light.2": {
-    "value": "#faf9fb",
+    "value": "#f9f9f9",
     "variable": "var(--colors-gray-light-2)"
   },
   "colors.gray.light.3": {
-    "value": "#f2eff3",
+    "value": "#f0f0f0",
     "variable": "var(--colors-gray-light-3)"
   },
   "colors.gray.light.4": {
-    "value": "#eae7ec",
+    "value": "#e8e8e8",
     "variable": "var(--colors-gray-light-4)"
   },
   "colors.gray.light.5": {
-    "value": "#e3dfe6",
+    "value": "#e0e0e0",
     "variable": "var(--colors-gray-light-5)"
   },
   "colors.gray.light.6": {
-    "value": "#dbd8e0",
+    "value": "#d9d9d9",
     "variable": "var(--colors-gray-light-6)"
   },
   "colors.gray.light.7": {
-    "value": "#d0cdd7",
+    "value": "#cecece",
     "variable": "var(--colors-gray-light-7)"
   },
   "colors.gray.light.8": {
-    "value": "#bcbac7",
+    "value": "#bbbbbb",
     "variable": "var(--colors-gray-light-8)"
   },
   "colors.gray.light.9": {
-    "value": "#8e8c99",
+    "value": "#8d8d8d",
     "variable": "var(--colors-gray-light-9)"
   },
   "colors.gray.light.10": {
-    "value": "#84828e",
+    "value": "#838383",
     "variable": "var(--colors-gray-light-10)"
   },
   "colors.gray.light.11": {
-    "value": "#65636d",
+    "value": "#646464",
     "variable": "var(--colors-gray-light-11)"
   },
   "colors.gray.light.12": {
-    "value": "#211f26",
+    "value": "#202020",
     "variable": "var(--colors-gray-light-12)"
   },
   "colors.gray.light.a1": {
-    "value": "#55005503",
+    "value": "#00000003",
     "variable": "var(--colors-gray-light-a1)"
   },
   "colors.gray.light.a2": {
-    "value": "#2b005506",
+    "value": "#00000006",
     "variable": "var(--colors-gray-light-a2)"
   },
   "colors.gray.light.a3": {
-    "value": "#30004010",
+    "value": "#0000000f",
     "variable": "var(--colors-gray-light-a3)"
   },
   "colors.gray.light.a4": {
-    "value": "#20003618",
+    "value": "#00000017",
     "variable": "var(--colors-gray-light-a4)"
   },
   "colors.gray.light.a5": {
-    "value": "#20003820",
+    "value": "#0000001f",
     "variable": "var(--colors-gray-light-a5)"
   },
   "colors.gray.light.a6": {
-    "value": "#14003527",
+    "value": "#00000026",
     "variable": "var(--colors-gray-light-a6)"
   },
   "colors.gray.light.a7": {
-    "value": "#10003332",
+    "value": "#00000031",
     "variable": "var(--colors-gray-light-a7)"
   },
   "colors.gray.light.a8": {
-    "value": "#08003145",
+    "value": "#00000044",
     "variable": "var(--colors-gray-light-a8)"
   },
   "colors.gray.light.a9": {
-    "value": "#05001d73",
+    "value": "#00000072",
     "variable": "var(--colors-gray-light-a9)"
   },
   "colors.gray.light.a10": {
-    "value": "#0500197d",
+    "value": "#0000007c",
     "variable": "var(--colors-gray-light-a10)"
   },
   "colors.gray.light.a11": {
-    "value": "#0400119c",
+    "value": "#0000009b",
     "variable": "var(--colors-gray-light-a11)"
   },
   "colors.gray.light.a12": {
-    "value": "#020008e0",
+    "value": "#000000df",
     "variable": "var(--colors-gray-light-a12)"
   },
   "colors.gray.dark.1": {
-    "value": "#121113",
+    "value": "#111111",
     "variable": "var(--colors-gray-dark-1)"
   },
   "colors.gray.dark.2": {
-    "value": "#1a191b",
+    "value": "#191919",
     "variable": "var(--colors-gray-dark-2)"
   },
   "colors.gray.dark.3": {
-    "value": "#232225",
+    "value": "#222222",
     "variable": "var(--colors-gray-dark-3)"
   },
   "colors.gray.dark.4": {
-    "value": "#2b292d",
+    "value": "#2a2a2a",
     "variable": "var(--colors-gray-dark-4)"
   },
   "colors.gray.dark.5": {
-    "value": "#323035",
+    "value": "#313131",
     "variable": "var(--colors-gray-dark-5)"
   },
   "colors.gray.dark.6": {
-    "value": "#3c393f",
+    "value": "#3a3a3a",
     "variable": "var(--colors-gray-dark-6)"
   },
   "colors.gray.dark.7": {
-    "value": "#49474e",
+    "value": "#484848",
     "variable": "var(--colors-gray-dark-7)"
   },
   "colors.gray.dark.8": {
-    "value": "#625f69",
+    "value": "#606060",
     "variable": "var(--colors-gray-dark-8)"
   },
   "colors.gray.dark.9": {
-    "value": "#6f6d78",
+    "value": "#6e6e6e",
     "variable": "var(--colors-gray-dark-9)"
   },
   "colors.gray.dark.10": {
-    "value": "#7c7a85",
+    "value": "#7b7b7b",
     "variable": "var(--colors-gray-dark-10)"
   },
   "colors.gray.dark.11": {
-    "value": "#b5b2bc",
+    "value": "#b4b4b4",
     "variable": "var(--colors-gray-dark-11)"
   },
   "colors.gray.dark.12": {
-    "value": "#eeeef0",
+    "value": "#eeeeee",
     "variable": "var(--colors-gray-dark-12)"
   },
   "colors.gray.dark.a1": {
@@ -1860,47 +1860,47 @@ const tokens = {
     "variable": "var(--colors-gray-dark-a1)"
   },
   "colors.gray.dark.a2": {
-    "value": "#f5f4f609",
+    "value": "#ffffff09",
     "variable": "var(--colors-gray-dark-a2)"
   },
   "colors.gray.dark.a3": {
-    "value": "#ebeaf814",
+    "value": "#ffffff12",
     "variable": "var(--colors-gray-dark-a3)"
   },
   "colors.gray.dark.a4": {
-    "value": "#eee5f81d",
+    "value": "#ffffff1b",
     "variable": "var(--colors-gray-dark-a4)"
   },
   "colors.gray.dark.a5": {
-    "value": "#efe6fe25",
+    "value": "#ffffff22",
     "variable": "var(--colors-gray-dark-a5)"
   },
   "colors.gray.dark.a6": {
-    "value": "#f1e6fd30",
+    "value": "#ffffff2c",
     "variable": "var(--colors-gray-dark-a6)"
   },
   "colors.gray.dark.a7": {
-    "value": "#eee9ff40",
+    "value": "#ffffff3b",
     "variable": "var(--colors-gray-dark-a7)"
   },
   "colors.gray.dark.a8": {
-    "value": "#eee7ff5d",
+    "value": "#ffffff55",
     "variable": "var(--colors-gray-dark-a8)"
   },
   "colors.gray.dark.a9": {
-    "value": "#eae6fd6e",
+    "value": "#ffffff64",
     "variable": "var(--colors-gray-dark-a9)"
   },
   "colors.gray.dark.a10": {
-    "value": "#ece9fd7c",
+    "value": "#ffffff72",
     "variable": "var(--colors-gray-dark-a10)"
   },
   "colors.gray.dark.a11": {
-    "value": "#f5f1ffb7",
+    "value": "#ffffffaf",
     "variable": "var(--colors-gray-dark-a11)"
   },
   "colors.gray.dark.a12": {
-    "value": "#fdfdffef",
+    "value": "#ffffffed",
     "variable": "var(--colors-gray-dark-a12)"
   },
   "colors.green.light.1": {

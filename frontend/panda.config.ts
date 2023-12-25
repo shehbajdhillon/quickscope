@@ -8,7 +8,7 @@ export default defineConfig({
     '@park-ui/panda-preset',
     createPreset({
       accentColor: 'neutral',
-      grayColor: 'mauve',
+      grayColor: 'neutral',
       borderRadius: 'md',
     }),
   ],

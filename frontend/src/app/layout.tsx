@@ -21,7 +21,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={inter.className}>
-          <div className={css({ display: "flex", flexDir: "column", backgroundColor: "mauve.5", alignItems: "center", minH: "100vh", color: "red.dark.3"  })}>
+          <div className={css({ display: "flex", flexDir: "column", alignItems: "center", minH: "100vh" })}>
             <div className={css({ w: "full" })}>
               <Navbar />
             </div>
