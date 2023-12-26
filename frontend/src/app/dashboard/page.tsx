@@ -77,27 +77,29 @@ const NewMonitorCard = () => {
 
 const MonitorCard = () => {
   return (
-    <Card className={css({
-      borderWidth: "1px",
-      w: { base: "330px", md: "360px" },
-      h: { base: "215.63px", md: "232.5px"},
-    })}>
+    <Link href="/dashboard/monitor">
+      <Card className={css({
+        borderWidth: "1px",
+        w: { base: "330px", md: "360px" },
+        h: { base: "215.63px", md: "232.5px"},
+      })}>
 
-      <CardHeader>
-        <CardTitle>PlanetCast Monitor</CardTitle>
-        <CardDescription>3 Fixes Available</CardDescription>
-      </CardHeader>
+        <CardHeader>
+          <CardTitle>PlanetCast Monitor</CardTitle>
+          <CardDescription>3 Fixes Available</CardDescription>
+        </CardHeader>
 
-      <CardBody>
-        Pass Rate: 86%
-      </CardBody>
+        <CardBody>
+          Pass Rate: 86%
+        </CardBody>
 
-      <CardFooter gap="3">
-        <Button variant="outline">Cancel</Button>
-        <Button>Invite</Button>
-      </CardFooter>
+        <CardFooter gap="3">
+          <Button variant="outline">Cancel</Button>
+          <Button>Invite</Button>
+        </CardFooter>
 
-    </Card>
+      </Card>
+    </Link>
   );
 };
 
