@@ -14,6 +14,7 @@ export type ComponentProps<T extends ElementType> = DistributiveOmit<ComponentPr
 export interface StyledComponent<T extends ElementType, P extends Dict = {}> {
   (props: JsxHTMLProps<ComponentProps<T>, Assign<JsxStyleProps, P>>): JSX.Element
   displayName?: string
+  placeholder?: string
 }
 
 interface RecipeFn {
