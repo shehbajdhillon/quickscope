@@ -7,7 +7,7 @@ import Link from "next/link";
 const MarketingNavbar: React.FC = () => {
 
   return (
-    <div className={css({ borderBottomWidth: "2px", display: "flex", alignItems: "center", minH: "60px", px: "10px", justifyContent: "center" })}>
+    <div className={css({ display: "flex", alignItems: "center", minH: "60px", px: "10px", justifyContent: "center" })}>
       <div className={css({ justifyContent: "space-between", maxW: "1920px", w: "full", display: "flex" })}>
         <Link href="/dashboard">
           <div className={hstack({ gap: "5px" })}>
