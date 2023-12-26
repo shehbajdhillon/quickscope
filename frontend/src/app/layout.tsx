@@ -10,6 +10,9 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'QuickScope',
   description: 'Solve Production Errors Faster',
+  icons: {
+    icon: '/quickscopelogo.png'
+  },
 }
 
 export default function RootLayout({
