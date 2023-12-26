@@ -1,8 +1,10 @@
 import { css } from "@/styled-system/css";
+import Navbar from "./MarketingNavbar";
 
 export default function Home() {
   return (
     <main>
+      <Navbar />
       <div className={css({ textAlign: "flex-start", gap: "1000px" })}>
         <h1 className={css({ fontSize: { base: "60px", lg: "90px" }, fontWeight: "medium" })}>QuickScope</h1>
         <p className={css({ fontWeight: "medium", fontSize: "25px" })}>
