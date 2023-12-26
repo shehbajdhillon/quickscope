@@ -42,8 +42,8 @@ const MonitorCardGrid = () => {
   return (
     <Grid
       placeItems="center"
-      gap="60px"
-      py="50px"
+      gap="30px"
+      py="20px"
       gridTemplateColumns={{
         base: "repeat(2, 1fr)",
         md: "repeat(4, 1fr)",
