@@ -58,7 +58,7 @@ const Dashboard: React.FC = () => {
 
 const NewMonitorCard = () => {
   return (
-    <Link href="/new">
+    <Link href="/dashboard/new">
       <Card className={css({
         borderWidth: "1px",
         w: { base: "330px", md: "360px" },
