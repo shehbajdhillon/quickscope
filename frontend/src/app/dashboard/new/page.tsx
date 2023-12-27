@@ -14,6 +14,7 @@ import { MenuSeparator } from "@ark-ui/react";
 import { Link } from "@/components/ui/link";
 
 import { validatePostHogAPIKey, validateRailwayAPIKey } from "./actions";
+import { useRouter } from "next/navigation";
 
 
 const NewPage = () => {
@@ -250,7 +251,21 @@ const GithubImportBox = () => {
     { label: 'jointaro', value: 'jointaro' },
     { label: 'spendsense', value: 'spendsense'},
     { label: 'interviewingio', value: 'interviewingio' },
+    { label: '+ New GitHub Account', value: 'addnewaccount' },
   ]
+
+  const [gitAccount, setGitAccount] = useState(items[0].value);
+
+  const githubAppInstallationUrl =
+    "https://github.com/apps/quickscopedev/installations/new";
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (gitAccount == "addnewaccount") {
+      router.push(githubAppInstallationUrl);
+    }
+  }, [gitAccount]);
 
   return (
     <Card borderColor={"red"}>
@@ -263,7 +278,12 @@ const GithubImportBox = () => {
       <CardBody gap={"20px"}>
 
         <HStack>
-          <Select.Root positioning={{ sameWidth: true }} items={items} defaultValue={[items[0].value]}>
+          <Select.Root
+            positioning={{ sameWidth: true }}
+            items={items}
+            defaultValue={[items[0].value]}
+            onValueChange={(event) => setGitAccount(event.value[0])}
+          >
             <Select.Control>
               <Select.Trigger>
                 <Select.ValueText />
@@ -286,11 +306,8 @@ const GithubImportBox = () => {
               </Select.Content>
             </Select.Positioner>
           </Select.Root>
-
-
           <Input placeholder="Search" />
         </HStack>
-
         <HStack>
           PlanetCast
           <Spacer />
@@ -298,35 +315,8 @@ const GithubImportBox = () => {
            Import
           </Button>
         </HStack>
-
-        <HStack>
-          Checkers
-          <Spacer />
-          <Button>
-           Import
-          </Button>
-        </HStack>
-
-        <HStack>
-          Taro
-          <Spacer />
-          <Button>
-           Import
-          </Button>
-        </HStack>
-
-        <HStack>
-          InterviewingIo
-          <Spacer />
-          <Button>
-           Import
-          </Button>
-        </HStack>
-
         <MenuSeparator />
-
         <text>All connected repositories will show here. (None connected yet)</text>
-
       </CardBody>
       <CardFooter>
       </CardFooter>
