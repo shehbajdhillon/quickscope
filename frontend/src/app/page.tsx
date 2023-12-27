@@ -1,5 +1,7 @@
 import { css } from "@/styled-system/css";
 import Navbar from "./MarketingNavbar";
+import Image from "next/image";
+import { Center } from "@/styled-system/jsx";
 
 export default function Home() {
   return (
@@ -13,6 +15,14 @@ export default function Home() {
         <p className={css({ fontWeight: "medium", fontSize: "25px", pt: "10px" })}>
           Using QuickScope, engineering teams spend less time putting out fires and more time building features loved by their users.
         </p>
+        <Center pt="50px">
+          <Image
+            src={'/quickscopegraph.png'}
+            height={380}
+            width={1000}
+            alt="Quick Scope Graph"
+          />
+        </Center>
       </div>
     </main>
   )
