@@ -41,7 +41,7 @@ const VercelCallbackPage = () => {
           Connect your Vercel acccount to QuickScope.
         </p>
       </Stack>
-      <VStack>
+      <VStack hidden={res === undefined}>
         <Stack direction={"column"}>
           <Stack
             direction={{ base: "column", md: "row" }}

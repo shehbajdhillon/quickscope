@@ -35,6 +35,11 @@ export async function POST(req: Request) {
     return;
   })
 
+  const body = await req.json();
+  const headers = req.headers;
+
+  console.log("[GITHUB WEBHOOK] Here is the GitHub webhook request", { body, headers });
+
   try {
     await githubApp.webhooks.verifyAndReceive({
       id: req.headers.get('x-github-delivery') || "",
@@ -47,6 +52,7 @@ export async function POST(req: Request) {
       { status: 201 },
     );
   } catch (error) {
+    console.log(`[GITHUB WEBHOOK] GitHub Webhook Request Failed: ${error}`);
     return NextResponse.json(
       { error: `[GITHUB WEBHOOK] GitHub Webhook Request Failed: ${error}` },
       { status: 400 },
