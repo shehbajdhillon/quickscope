@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { css } from '@/styled-system/css'
 import { ClerkProvider } from '@clerk/nextjs'
+import { ApolloProviderWrapper } from './ApolloProviderWrapper'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -21,15 +22,17 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body className={inter.className}>
-          <div className={css({ display: "flex", flexDir: "column", alignItems: "center", minH: "100vh" })}>
-            <div className={css({ maxWidth: "1920px", w: "full", px: "10px" })}>
-              {children}
+      <ApolloProviderWrapper>
+        <html lang="en">
+          <body className={inter.className}>
+            <div className={css({ display: "flex", flexDir: "column", alignItems: "center", minH: "100vh" })}>
+              <div className={css({ maxWidth: "1920px", w: "full", px: "10px" })}>
+                {children}
+              </div>
             </div>
-          </div>
-        </body>
-      </html>
+          </body>
+        </html>
+      </ApolloProviderWrapper>
     </ClerkProvider>
   )
 }
