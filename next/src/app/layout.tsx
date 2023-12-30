@@ -24,6 +24,7 @@ export default function RootLayout({
     <ClerkProvider>
       <ApolloProviderWrapper>
         <html lang="en">
+          <link rel="icon" href="/favicon.ico" sizes="any" />
           <body className={inter.className}>
             <div className={css({ display: "flex", flexDir: "column", alignItems: "center", minH: "100vh" })}>
               <div className={css({ maxWidth: "1920px", w: "full", px: "10px" })}>
