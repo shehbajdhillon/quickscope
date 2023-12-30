@@ -96,6 +96,19 @@ func (ns NullTeamType) Value() (driver.Value, error) {
 	return string(ns.TeamType), nil
 }
 
+type Monitor struct {
+	ID      int64
+	TeamID  int64
+	Slug    string
+	Name    string
+	Created time.Time
+}
+
+type Provider struct {
+	ID        int64
+	MonitorID int64
+}
+
 type Team struct {
 	ID               int64
 	Slug             string
