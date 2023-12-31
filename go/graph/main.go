@@ -24,7 +24,7 @@ func Connnect(args GraphConnectProps) *handler.Server {
 
 	logger := args.Logger
 
-	gqlConfig := Config{Resolvers: &Resolver{}}
+	gqlConfig := Config{Resolvers: &Resolver{Database: args.Queries}}
 
 	var MB int64 = 1 << 20
 

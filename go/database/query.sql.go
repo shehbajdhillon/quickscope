@@ -30,6 +30,117 @@ func (q *Queries) AddUser(ctx context.Context, arg AddUserParams) (Userinfo, err
 	return i, err
 }
 
+const getMonitorByTeamIdAndMonitorSlug = `-- name: GetMonitorByTeamIdAndMonitorSlug :one
+SELECT id, team_id, monitor_slug, monitor_name, created FROM monitor WHERE team_id = $1 and monitor_slug = $2 LIMIT 1
+`
+
+type GetMonitorByTeamIdAndMonitorSlugParams struct {
+	TeamID      int64
+	MonitorSlug string
+}
+
+func (q *Queries) GetMonitorByTeamIdAndMonitorSlug(ctx context.Context, arg GetMonitorByTeamIdAndMonitorSlugParams) (Monitor, error) {
+	row := q.db.QueryRowContext(ctx, getMonitorByTeamIdAndMonitorSlug, arg.TeamID, arg.MonitorSlug)
+	var i Monitor
+	err := row.Scan(
+		&i.ID,
+		&i.TeamID,
+		&i.MonitorSlug,
+		&i.MonitorName,
+		&i.Created,
+	)
+	return i, err
+}
+
+const getMonitorsByTeamId = `-- name: GetMonitorsByTeamId :many
+SELECT id, team_id, monitor_slug, monitor_name, created FROM monitor WHERE team_id = $1 ORDER BY created
+`
+
+func (q *Queries) GetMonitorsByTeamId(ctx context.Context, teamID int64) ([]Monitor, error) {
+	rows, err := q.db.QueryContext(ctx, getMonitorsByTeamId, teamID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Monitor
+	for rows.Next() {
+		var i Monitor
+		if err := rows.Scan(
+			&i.ID,
+			&i.TeamID,
+			&i.MonitorSlug,
+			&i.MonitorName,
+			&i.Created,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTeamByTeamSlug = `-- name: GetTeamByTeamSlug :one
+SELECT id, team_slug, team_name, stripe_customer_id, team_type, created FROM team WHERE team_slug = $1 LIMIT 1
+`
+
+func (q *Queries) GetTeamByTeamSlug(ctx context.Context, teamSlug string) (Team, error) {
+	row := q.db.QueryRowContext(ctx, getTeamByTeamSlug, teamSlug)
+	var i Team
+	err := row.Scan(
+		&i.ID,
+		&i.TeamSlug,
+		&i.TeamName,
+		&i.StripeCustomerID,
+		&i.TeamType,
+		&i.Created,
+	)
+	return i, err
+}
+
+const getTeamsByUserId = `-- name: GetTeamsByUserId :many
+SELECT team.id, team.team_slug, team.team_name, team.stripe_customer_id, team.team_type, team.created
+FROM team
+JOIN team_membership on team.id = team_membership.team_id
+WHERE team_membership.user_id = $1
+ORDER BY created
+`
+
+func (q *Queries) GetTeamsByUserId(ctx context.Context, userID int64) ([]Team, error) {
+	rows, err := q.db.QueryContext(ctx, getTeamsByUserId, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Team
+	for rows.Next() {
+		var i Team
+		if err := rows.Scan(
+			&i.ID,
+			&i.TeamSlug,
+			&i.TeamName,
+			&i.StripeCustomerID,
+			&i.TeamType,
+			&i.Created,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT id, email, full_name, created FROM userinfo WHERE email = $1 LIMIT 1
 `

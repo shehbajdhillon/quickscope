@@ -97,22 +97,24 @@ func (ns NullTeamType) Value() (driver.Value, error) {
 }
 
 type Monitor struct {
-	ID      int64
-	TeamID  int64
-	Slug    string
-	Name    string
-	Created time.Time
+	ID          int64
+	TeamID      int64
+	MonitorSlug string
+	MonitorName string
+	Created     time.Time
 }
 
 type Provider struct {
-	ID        int64
-	MonitorID int64
+	ID           int64
+	MonitorID    int64
+	ProviderName string
+	Credentials  string
 }
 
 type Team struct {
 	ID               int64
-	Slug             string
-	Name             string
+	TeamSlug         string
+	TeamName         string
 	StripeCustomerID sql.NullString
 	TeamType         TeamType
 	Created          time.Time
@@ -120,7 +122,7 @@ type Team struct {
 
 type TeamInvite struct {
 	ID           int64
-	Slug         string
+	Invitecode   string
 	TeamID       int64
 	InviteeEmail string
 	Created      time.Time

@@ -2,27 +2,40 @@
 #
 # https://gqlgen.com/getting-started/
 
-type Todo {
-  id: ID!
-  text: String!
-  done: Boolean!
-  user: User!
-}
+scalar DateTime
+scalar Int64
+scalar Upload
 
-type User {
-  id: ID!
-  name: String!
-}
+directive @loggedIn on FIELD_DEFINITION
+directive @memberTeam on ARGUMENT_DEFINITION
+directive @ownsMonitor on ARGUMENT_DEFINITION
+directive @ownsInvite on ARGUMENT_DEFINITION
+directive @isInvitee on ARGUMENT_DEFINITION
 
 type Query {
-  todos: [Todo!]!
-}
-
-input NewTodo {
-  text: String!
-  userId: String!
+  teams(teamSlug: String): [Team!]!
 }
 
 type Mutation {
-  createTodo(input: NewTodo!): Todo!
+  createMonitor(input: NewMonitor!): Monitor!
+}
+
+type Team {
+  id: Int64!
+  teamSlug: String!
+  teamName: String!
+  teamType: String!
+  monitors(monitorSlug: String): [Monitor!]!
+}
+
+type Monitor {
+  id: Int64!
+  teamId: Int64!
+  monitorSlug: String!
+  monitorName: String!
+}
+
+input NewMonitor {
+  monitorName: String!
+  teamId: Int64!
 }
