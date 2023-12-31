@@ -35,17 +35,17 @@ export async function POST(req: Request) {
     return;
   })
 
-  const body = await req.json();
   const headers = req.headers;
+  const payload = await req.text();
 
-  console.log("[GITHUB WEBHOOK] Here is the GitHub webhook request", { body, headers });
+  console.log("[GITHUB WEBHOOK] Here is the GitHub webhook request", { payload, headers });
 
   try {
     await githubApp.webhooks.verifyAndReceive({
       id: req.headers.get('x-github-delivery') || "",
       name: (req.headers.get('x-github-event') || "" as any),
       signature: req.headers.get('x-hub-signature-256') || "",
-      payload: await req.text(),
+      payload,
     });
     return NextResponse.json(
       { message: "[GITHUB WEBHOOK] GitHub Webhook Request Processed Successfully" },
