@@ -17,15 +17,25 @@ func (r *mutationResolver) CreateMonitor(ctx context.Context, input model.NewMon
 	panic(fmt.Errorf("not implemented: CreateMonitor - createMonitor"))
 }
 
+// AddProvider is the resolver for the addProvider field.
+func (r *mutationResolver) AddProvider(ctx context.Context, input model.NewProvider) (database.Provider, error) {
+	panic(fmt.Errorf("not implemented: AddProvider - addProvider"))
+}
+
 // Teams is the resolver for the teams field.
 func (r *queryResolver) Teams(ctx context.Context, teamSlug *string) ([]database.Team, error) {
+	email, _ := auth.EmailFromContext(ctx)
+	user, _ := r.Database.GetUserByEmail(ctx, email)
+
 	if teamSlug != nil {
 		team, err := r.Database.GetTeamByTeamSlug(ctx, *teamSlug)
+		r.Database.UpdateUserLastAccessedTeam(ctx, database.UpdateUserLastAccessedTeamParams{
+			UserID:             user.ID,
+			LastAccessedTeamID: team.ID,
+		})
 		return []database.Team{team}, err
 	}
 
-	email, _ := auth.EmailFromContext(ctx)
-	user, _ := r.Database.GetUserByEmail(ctx, email)
 	return r.Database.GetTeamsByUserId(ctx, user.ID)
 }
 

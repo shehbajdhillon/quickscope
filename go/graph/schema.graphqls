@@ -7,7 +7,7 @@ scalar Int64
 scalar Upload
 
 directive @loggedIn on FIELD_DEFINITION
-directive @memberTeam on ARGUMENT_DEFINITION
+directive @memberTeam on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
 directive @ownsInvite on ARGUMENT_DEFINITION
 directive @isInvitee on ARGUMENT_DEFINITION
 
@@ -17,6 +17,7 @@ type Query {
 
 type Mutation {
   createMonitor(input: NewMonitor!): Monitor!
+  addProvider(input: NewProvider!): Provider!
 }
 
 type Team {
@@ -35,6 +36,18 @@ type Monitor {
 }
 
 input NewMonitor {
+  teamId: Int64! @memberTeam
   monitorName: String!
-  teamId: Int64!
+}
+
+type Provider {
+  id: Int64!
+  userId: Int64!
+  providerName: String!
+}
+
+input NewProvider {
+  teamId: Int64! @memberTeam
+  providerName: String!
+  providerCredentials: String!
 }

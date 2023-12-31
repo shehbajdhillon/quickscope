@@ -105,10 +105,16 @@ type Monitor struct {
 }
 
 type Provider struct {
-	ID           int64
-	MonitorID    int64
-	ProviderName string
-	Credentials  string
+	ID                  int64
+	UserID              int64
+	ProviderName        string
+	ProviderCredentials string
+}
+
+type ProviderIntegration struct {
+	ID     int64
+	TeamID int64
+	UserID int64
 }
 
 type Team struct {
@@ -136,9 +142,16 @@ type TeamMembership struct {
 	Created        time.Time
 }
 
-type Userinfo struct {
+type UserInfo struct {
 	ID       int64
 	Email    string
 	FullName string
 	Created  time.Time
+}
+
+type UserPreference struct {
+	ID                 int64
+	UserID             int64
+	LastAccessedTeamID int64
+	Created            time.Time
 }

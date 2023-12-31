@@ -13,7 +13,10 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type GraphConnectProps struct {
@@ -29,6 +32,18 @@ func Connnect(args GraphConnectProps) *handler.Server {
 
 	gqlConfig.Directives.LoggedIn = func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
 		if isLoggedIn(ctx) == false {
+			return nil, fmt.Errorf("Access Denied")
+		}
+		return next(ctx)
+	}
+
+	gqlConfig.Directives.MemberTeam = func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
+		teamSlugField := obj.(map[string]interface{})["teamSlug"]
+		if teamSlugField == nil {
+			return nil, fmt.Errorf("Access Denied")
+		}
+		teamSlug := teamSlugField.(string)
+		if memberTeam(ctx, teamSlug, args.Queries) == false {
 			return nil, fmt.Errorf("Access Denied")
 		}
 		return next(ctx)
@@ -64,7 +79,12 @@ func Connnect(args GraphConnectProps) *handler.Server {
 			user, err := args.Queries.GetUserByEmail(ctx, emailAddr)
 
 			if err != nil {
-				userPtr, err := setupNewUser(ctx, setupNewUserProps{emailAddr: emailAddr, fullName: fullName})
+				userPtr, err := setupNewUser(ctx, setupNewUserProps{
+					emailAddr: emailAddr,
+					fullName:  fullName,
+					logger:    args.Logger,
+					queries:   args.Queries,
+				})
 				if err == nil {
 					user = *userPtr
 				}
@@ -125,10 +145,65 @@ type setupNewUserProps struct {
 	queries   *database.Queries
 	emailAddr string
 	fullName  string
+	logger    *zap.Logger
 }
 
-func setupNewUser(ctx context.Context, args setupNewUserProps) (*database.Userinfo, error) {
-	user, err := args.queries.AddUser(
-		ctx, database.AddUserParams{Email: args.emailAddr, FullName: strings.Title(strings.ToLower(args.fullName))})
+func setupNewUser(ctx context.Context, args setupNewUserProps) (*database.UserInfo, error) {
+
+	fullName := cases.Title(language.Und).String(strings.ToLower(args.fullName))
+	firstName := strings.ToLower(strings.Split(args.fullName, " ")[0])
+
+	user, err := args.queries.AddUser(ctx, database.AddUserParams{
+		Email:    args.emailAddr,
+		FullName: fullName,
+	})
+
+	if err != nil {
+		args.logger.Error(
+			"Could not setup new user",
+			zap.Error(err),
+			zap.String("user_email", args.emailAddr),
+			zap.String("user_name", args.fullName),
+		)
+		return nil, fmt.Errorf("Could not setup new user")
+	}
+
+	var teamSlug string
+	var error error = nil
+	retries := 5
+
+	for error == nil && retries >= 0 {
+		retries -= 1
+		shortUuid := uuid.NewString()[:8]
+		teamSlug = fmt.Sprintf("%s-%s", firstName, shortUuid)
+		_, error = args.queries.GetTeamByTeamSlug(ctx, teamSlug)
+	}
+
+	if retries < 0 {
+		teamSlug = uuid.NewString()
+	}
+
+	team, err := args.queries.CreateNewTeam(ctx, database.CreateNewTeamParams{
+		TeamSlug: teamSlug,
+		TeamName: fmt.Sprintf("%s's Personal Workspace", fullName),
+		TeamType: database.TeamTypePERSONAL,
+	})
+
+	if err != nil {
+		args.logger.Error(
+			"Could not create new personal team for user",
+			zap.Error(err),
+			zap.String("user_email", args.emailAddr),
+			zap.String("user_name", args.fullName),
+		)
+		return nil, fmt.Errorf("Could not create new personal team for user")
+	}
+
+	_, err = args.queries.AddTeamMembership(ctx, database.AddTeamMembershipParams{
+		TeamID:         team.ID,
+		UserID:         user.ID,
+		MembershipType: database.MembershipTypeOWNER,
+	})
+
 	return &user, err
 }
