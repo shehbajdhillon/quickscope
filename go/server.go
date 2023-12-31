@@ -9,7 +9,6 @@ import (
 	"quickscopedev/graph"
 	"quickscopedev/logger"
 
-	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
@@ -27,7 +26,9 @@ func main() {
 
 	production := os.Getenv("PRODUCTION") != ""
 	Logger := logger.Connect(production)
-	database.Connect(database.DatabaseConnectProps{Logger: Logger})
+	Database := database.Connect(database.DatabaseConnectProps{Logger: Logger})
+
+	srv := graph.Connnect(graph.GraphConnectProps{Logger: Logger, Queries: Database})
 
 	router := chi.NewRouter()
 	router.Use(cors.New(cors.Options{
@@ -43,7 +44,6 @@ func main() {
 		Debug:            false,
 	}).Handler)
 
-	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
 	router.Use(auth.Middleware())
 	router.Handle("/", srv)
 
