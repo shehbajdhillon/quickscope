@@ -46,11 +46,10 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
-	IsInvitee   func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	LoggedIn    func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	MemberTeam  func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	OwnsInvite  func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	OwnsMonitor func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+	IsInvitee  func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+	LoggedIn   func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+	MemberTeam func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+	OwnsInvite func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -361,9 +360,24 @@ func (ec *executionContext) field_Query_teams_args(ctx context.Context, rawArgs 
 	var arg0 *string
 	if tmp, ok := rawArgs["teamSlug"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("teamSlug"))
-		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		directive0 := func(ctx context.Context) (interface{}, error) { return ec.unmarshalOString2ᚖstring(ctx, tmp) }
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.MemberTeam == nil {
+				return nil, errors.New("directive memberTeam is not implemented")
+			}
+			return ec.directives.MemberTeam(ctx, rawArgs, directive0)
+		}
+
+		tmp, err = directive1(ctx)
 		if err != nil {
-			return nil, err
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if data, ok := tmp.(*string); ok {
+			arg0 = data
+		} else if tmp == nil {
+			arg0 = nil
+		} else {
+			return nil, graphql.ErrorOnPath(ctx, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp))
 		}
 	}
 	args["teamSlug"] = arg0
@@ -677,8 +691,28 @@ func (ec *executionContext) _Query_teams(ctx context.Context, field graphql.Coll
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Teams(rctx, fc.Args["teamSlug"].(*string))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Teams(rctx, fc.Args["teamSlug"].(*string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.LoggedIn == nil {
+				return nil, errors.New("directive loggedIn is not implemented")
+			}
+			return ec.directives.LoggedIn(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]database.Team); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []quickscopedev/database.Team`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)

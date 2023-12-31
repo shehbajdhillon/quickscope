@@ -8,12 +8,11 @@ scalar Upload
 
 directive @loggedIn on FIELD_DEFINITION
 directive @memberTeam on ARGUMENT_DEFINITION
-directive @ownsMonitor on ARGUMENT_DEFINITION
 directive @ownsInvite on ARGUMENT_DEFINITION
 directive @isInvitee on ARGUMENT_DEFINITION
 
 type Query {
-  teams(teamSlug: String): [Team!]!
+  teams(teamSlug: String @memberTeam): [Team!]! @loggedIn
 }
 
 type Mutation {

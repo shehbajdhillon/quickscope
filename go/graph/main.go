@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 	"quickscopedev/auth"
 	"quickscopedev/database"
 	"strings"
@@ -25,6 +26,13 @@ func Connnect(args GraphConnectProps) *handler.Server {
 	logger := args.Logger
 
 	gqlConfig := Config{Resolvers: &Resolver{Database: args.Queries}}
+
+	gqlConfig.Directives.LoggedIn = func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
+		if isLoggedIn(ctx) == false {
+			return nil, fmt.Errorf("Access Denied")
+		}
+		return next(ctx)
+	}
 
 	var MB int64 = 1 << 20
 
@@ -69,6 +77,48 @@ func Connnect(args GraphConnectProps) *handler.Server {
 
 	return gqlServer
 
+}
+
+func memberTeam(ctx context.Context, teamSlug string, queries *database.Queries) bool {
+	if !isLoggedIn(ctx) {
+		return false
+	}
+
+	if isSuperAdmin(ctx) {
+		return true
+	}
+
+	userEmail, _ := auth.EmailFromContext(ctx)
+	user, _ := queries.GetUserByEmail(ctx, userEmail)
+
+	var team database.Team
+	team, _ = queries.GetTeamByTeamSlug(ctx, teamSlug)
+
+	_, err := queries.GetTeamMembershipByTeamIdUserId(ctx, database.GetTeamMembershipByTeamIdUserIdParams{
+		UserID: user.ID,
+		TeamID: team.ID,
+	})
+
+	return err == nil
+}
+
+func isLoggedIn(ctx context.Context) bool {
+	user := auth.FromContext(ctx)
+	return user != nil
+}
+
+func isSuperAdmin(ctx context.Context) bool {
+	userEmail, _ := auth.EmailFromContext(ctx)
+
+	if strings.Split(userEmail, "@")[1] == "quickscope.dev" {
+		return true
+	}
+
+	if userEmail == "shehbaj.dhillon@gmail.com" {
+		return true
+	}
+
+	return false
 }
 
 type setupNewUserProps struct {

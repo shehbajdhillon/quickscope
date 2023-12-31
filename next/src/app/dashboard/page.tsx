@@ -6,6 +6,15 @@ import { PlusIcon } from "lucide-react";
 import Link from "next/link";
 
 import * as Tabs from '@/components/ui/tabs'
+import { gql } from "@apollo/client";
+
+const GET_TEAMS = gql`
+  query GetTeams {
+    teams {
+      id
+    }
+  }
+`;
 
 const Dashboard: React.FC = () => {
 

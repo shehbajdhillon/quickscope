@@ -10,6 +10,12 @@ SELECT * FROM userinfo WHERE id = $1 LIMIT 1;
 -- name: GetTeamByTeamSlug :one
 SELECT * FROM team WHERE team_slug = $1 LIMIT 1;
 
+-- name: GetTeamByTeamId :one
+SELECT * FROM team WHERE id = $1 LIMIT 1;
+
+-- name: GetTeamMembershipByTeamIdUserId :one
+SELECT * FROM team_membership WHERE team_id = $1 AND user_id = $2 LIMIT 1;
+
 -- name: GetTeamsByUserId :many
 SELECT team.*
 FROM team
@@ -22,3 +28,4 @@ SELECT * FROM monitor WHERE team_id = $1 and monitor_slug = $2 LIMIT 1;
 
 -- name: GetMonitorsByTeamId :many
 SELECT * FROM monitor WHERE team_id = $1 ORDER BY created;
+
