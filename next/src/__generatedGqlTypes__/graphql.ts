@@ -29,7 +29,13 @@ export type Monitor = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  addProvider: Provider;
   createMonitor: Monitor;
+};
+
+
+export type MutationAddProviderArgs = {
+  input: NewProvider;
 };
 
 
@@ -40,6 +46,19 @@ export type MutationCreateMonitorArgs = {
 export type NewMonitor = {
   monitorName: Scalars['String']['input'];
   teamId: Scalars['Int64']['input'];
+};
+
+export type NewProvider = {
+  providerCredentials: Scalars['String']['input'];
+  providerName: Scalars['String']['input'];
+  teamId: Scalars['Int64']['input'];
+};
+
+export type Provider = {
+  __typename?: 'Provider';
+  id: Scalars['Int64']['output'];
+  providerName: Scalars['String']['output'];
+  userId: Scalars['Int64']['output'];
 };
 
 export type Query = {
@@ -71,5 +90,11 @@ export type GetTeamsQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type GetTeamsQuery = { __typename?: 'Query', teams: Array<{ __typename?: 'Team', id: any }> };
 
+export type GetTeamSlugsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetTeamSlugsQuery = { __typename?: 'Query', teams: Array<{ __typename?: 'Team', teamSlug: string }> };
+
 
 export const GetTeamsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetTeams"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teams"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<GetTeamsQuery, GetTeamsQueryVariables>;
+export const GetTeamSlugsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetTeamSlugs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teams"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teamSlug"}}]}}]}}]} as unknown as DocumentNode<GetTeamSlugsQuery, GetTeamSlugsQueryVariables>;
