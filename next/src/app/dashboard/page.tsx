@@ -1,24 +1,26 @@
+import { GetTeamSlugsQuery } from "@/__generatedGqlTypes__/graphql";
 import { GetApolloClient } from "@/apollo-client";
 import { gql } from "@apollo/client";
 import { auth } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
 
-const GET_TEAMS = gql`
-  query GetTeams {
-    getTeams {
-      slug
+const GET_TEAM_SLUGS = gql`
+  query GetTeamSlugs {
+    teams {
+      teamSlug
     }
   }
 `;
 
 export default async function Page() {
-  const { getToken } = auth()
+  const { getToken } = auth();
   const apolloClient = GetApolloClient(true, getToken);
-  let teams: any[] = [];
-  const { data } = await apolloClient.query({ query: GET_TEAMS });
-  teams = data.getTeams;
-  return {
-    props: { redirect: `/dashboard/${teams[0].slug}` }
-  }
+  const { data } = await apolloClient.query<GetTeamSlugsQuery>({
+    query: GET_TEAM_SLUGS,
+    context: { fetchOptions: { next: { revalidate: 5 } } }
+  });
+  const teams = data.teams;
+  redirect(`/dashboard/${teams[0].teamSlug}` )
 };
 
 

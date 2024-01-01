@@ -85,16 +85,10 @@ export type TeamMonitorsArgs = {
   monitorSlug?: InputMaybe<Scalars['String']['input']>;
 };
 
-export type GetTeamsQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type GetTeamsQuery = { __typename?: 'Query', teams: Array<{ __typename?: 'Team', id: any }> };
-
 export type GetTeamSlugsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GetTeamSlugsQuery = { __typename?: 'Query', teams: Array<{ __typename?: 'Team', teamSlug: string }> };
 
 
-export const GetTeamsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetTeams"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teams"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<GetTeamsQuery, GetTeamsQueryVariables>;
 export const GetTeamSlugsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetTeamSlugs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teams"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teamSlug"}}]}}]}}]} as unknown as DocumentNode<GetTeamSlugsQuery, GetTeamSlugsQueryVariables>;

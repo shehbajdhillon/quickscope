@@ -4,19 +4,9 @@ import { css } from "@/styled-system/css";
 import { Center, Grid, GridItem, Stack, VStack } from "@/styled-system/jsx";
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
-
 import * as Tabs from '@/components/ui/tabs'
-import { gql } from "@apollo/client";
 
-const GET_TEAMS = gql`
-  query GetTeams {
-    teams {
-      id
-    }
-  }
-`;
-
-const Dashboard: React.FC = () => {
+export default async function Dashboard({ params }: { params: { teamSlug: string }}) {
 
   const options = [
     { id: 'monitors', label: 'Monitors' },
@@ -36,7 +26,7 @@ const Dashboard: React.FC = () => {
         </Tabs.List>
         <Tabs.Content value="monitors">
           <VStack>
-            <MonitorCardGrid />
+            <MonitorCardGrid teamSlug={params.teamSlug} />
           </VStack>
         </Tabs.Content>
         <Tabs.Content value="teamsettings">
@@ -47,7 +37,7 @@ const Dashboard: React.FC = () => {
   );
 }
 
-const MonitorCardGrid = () => {
+const MonitorCardGrid = ({ teamSlug }: { teamSlug: string }) => {
   return (
     <Grid
       placeItems="center"
@@ -60,20 +50,20 @@ const MonitorCardGrid = () => {
       }}
     >
       <GridItem colSpan={2}>
-        <NewMonitorCard />
+        <NewMonitorCard teamSlug={teamSlug} />
       </GridItem>
       {new Array(7).fill(0).map((_, key) => (
         <GridItem colSpan={2} key={key}>
-          <MonitorCard />
+          <MonitorCard teamSlug={teamSlug} />
         </GridItem>
       ))}
     </Grid>
   );
 };
 
-const NewMonitorCard = () => {
+const NewMonitorCard = ({ teamSlug }: { teamSlug: string }) => {
   return (
-    <Link href="/dashboard/new">
+    <Link href={`/dashboard/${teamSlug}/new`}>
       <Card className={css({
         borderWidth: "1px",
         w: { base: "330px", md: "360px" },
@@ -90,9 +80,9 @@ const NewMonitorCard = () => {
   );
 };
 
-const MonitorCard = () => {
+const MonitorCard = ({ teamSlug }: { teamSlug: string }) => {
   return (
-    <Link href="/dashboard/monitor">
+    <Link href={`/dashboard/${teamSlug}/monitor`}>
       <Card className={css({
         borderWidth: "1px",
         w: { base: "330px", md: "360px" },
@@ -113,6 +103,4 @@ const MonitorCard = () => {
     </Link>
   );
 };
-
-export default Dashboard;
 

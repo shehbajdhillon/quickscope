@@ -11,7 +11,7 @@ const httpLink: any = createUploadLink({ uri: apiServer });
 
 export const GetApolloClient = (ssrMode: boolean, getToken: any) => {
   const authMiddleware = setContext(async (_, { headers }) => {
-    const token = await getToken({ template: 'QuickScope_GQL_Backend' });
+    const token = await getToken({ template: 'QuickScope_GQL_Server' });
     return {
       headers: {
         ...headers,
