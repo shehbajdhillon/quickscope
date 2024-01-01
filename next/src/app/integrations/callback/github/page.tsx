@@ -6,6 +6,7 @@ import { Stack, HStack, VStack, Spacer } from "@/styled-system/jsx";
 import { Card, CardBody, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useTransition } from "react";
+import { Code } from "@/components/ui/code";
 
 const GitHubCallbackPage = () => {
 
@@ -63,19 +64,14 @@ const ConfirmationBox = () => {
         </CardDescription>
       </CardHeader>
       <CardBody gap={"20px"}>
-        <HStack>
+        <Stack>
           <text className={css({ fontSize: "20px" })}>
-            You have successfully connected <br /><br />
-            <span className={css({ fontWeight: "medium" })}>
-              GitHub team<br />{"Shehbaj Dhillon's Personal Workspace"}<br /><br />
-            </span>
-            with<br /><br />
-            <span className={css({ fontWeight: "medium" })}>
-              QuickScope team<br />{"Shehbaj Dhillon's Personal Workspace"}<br /><br />
-            </span>
-            Your QuickScope team will have access to all authorized resources of this GitHub team.
+            Successfully connected to <Code size={"lg"}>shehbajdhillon</Code> on GitHub.
           </text>
-        </HStack>
+          <text className={css({ fontSize: "20px" })}>
+            Your QuickScope team will have access to all authorized resources of this GitHub account.
+          </text>
+        </Stack>
       </CardBody>
     </Card>
   );
