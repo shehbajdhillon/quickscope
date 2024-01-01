@@ -3,15 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { css } from "@/styled-system/css";
 import { Stack, HStack, VStack, Spacer } from "@/styled-system/jsx";
-import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
-import { Card, CardBody, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardBody, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
-import Link from "next/link";
+import { useEffect, useTransition } from "react";
 
 const GitHubCallbackPage = () => {
-
-  const [scope, setScope] = useState<"team" | "personal account" | undefined>();
 
   const searchParams = useSearchParams();
   const installationId = searchParams.get("installation_id");
@@ -47,18 +43,9 @@ const GitHubCallbackPage = () => {
           </Stack>
           <HStack pt="15px">
             <Spacer />
-            <Link href="/dashboard">
-              <Button>
-                <ArrowLeftIcon />
-                Cancel
-              </Button>
-            </Link>
-            <Link href={"/dashboard"}>
-              <Button>
-                Continue
-                <ArrowRightIcon />
-              </Button>
-            </Link>
+            <Button onClick={() => window.close()}>
+              Close Window
+            </Button>
           </HStack>
         </Stack>
       </VStack>
@@ -78,7 +65,7 @@ const ConfirmationBox = () => {
       <CardBody gap={"20px"}>
         <HStack>
           <text className={css({ fontSize: "20px" })}>
-            You are about to connect<br /><br />
+            You have successfully connected <br /><br />
             <span className={css({ fontWeight: "medium" })}>
               GitHub team<br />{"Shehbaj Dhillon's Personal Workspace"}<br /><br />
             </span>
@@ -90,8 +77,6 @@ const ConfirmationBox = () => {
           </text>
         </HStack>
       </CardBody>
-      <CardFooter>
-      </CardFooter>
     </Card>
   );
 };

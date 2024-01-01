@@ -14,7 +14,7 @@ import { MenuSeparator } from "@ark-ui/react";
 import { Link } from "@/components/ui/link";
 
 import { validatePostHogAPIKey, validateRailwayAPIKey } from "./actions";
-import { useRouter } from "next/navigation";
+import { openPopUpWindow } from "@/utils";
 
 
 const NewPage = () => {
@@ -251,21 +251,22 @@ const GithubImportBox = () => {
     { label: 'jointaro', value: 'jointaro' },
     { label: 'spendsense', value: 'spendsense'},
     { label: 'interviewingio', value: 'interviewingio' },
-    { label: '+ New GitHub Account', value: 'addnewaccount' },
   ]
 
   const [gitAccount, setGitAccount] = useState(items[0].value);
 
-  const githubAppInstallationUrl =
-    "https://github.com/apps/quickscopedev/installations/new";
+  const openGithubPopUp = () => {
+    const githubAppInstallationUrl =
+      "https://github.com/apps/quickscopedev/installations/new";
+    const window = openPopUpWindow(githubAppInstallationUrl);
+    const checkChildWindow = setInterval(() => {
+      if (window?.closed) {
+        clearInterval(checkChildWindow);
+        alert("Window has been closed");
+      }
+    }, 1000);
+  };
 
-  const router = useRouter();
-
-  useEffect(() => {
-    if (gitAccount == "addnewaccount") {
-      router.push(githubAppInstallationUrl);
-    }
-  }, [gitAccount]);
 
   return (
     <Card borderColor={"red"}>
@@ -308,6 +309,9 @@ const GithubImportBox = () => {
           </Select.Root>
           <Input placeholder="Search" />
         </HStack>
+        <Button w="max" onClick={openGithubPopUp}>
+          {"+ Add New GitHub Account"}
+        </Button>
         <HStack>
           PlanetCast
           <Spacer />
