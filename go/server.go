@@ -8,6 +8,7 @@ import (
 	"quickscopedev/database"
 	"quickscopedev/graph"
 	"quickscopedev/logger"
+	"quickscopedev/webhooks"
 
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5"
@@ -27,6 +28,7 @@ func main() {
 	production := os.Getenv("PRODUCTION") != ""
 	Logger := logger.Connect(production)
 	Database := database.Connect(database.DatabaseConnectProps{Logger: Logger})
+	Webhooks := webhooks.Connect(webhooks.WebhookMiddlewareConnectProps{Logger: Logger})
 
 	srv := graph.Connnect(graph.GraphConnectProps{Logger: Logger, Queries: Database})
 
@@ -46,6 +48,7 @@ func main() {
 
 	router.Use(auth.Middleware())
 	router.Handle("/", srv)
+	router.Post("/github-webhook", Webhooks.HandleGithubWebhook)
 
 	if production == false {
 		router.Handle("/playground", playground.Handler("GraphQL Playground", "/"))
