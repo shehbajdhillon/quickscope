@@ -66,7 +66,7 @@ CREATE TABLE monitor (
 DROP TABLE IF EXISTS integration CASCADE;
 CREATE TABLE integration (
   id BIGSERIAL PRIMARY KEY NOT NULL,
-  team_id BIGINT UNIQUE REFERENCES user_info (id) ON DELETE CASCADE DEFAULT NULL,
+  team_id BIGINT REFERENCES team (id) ON DELETE CASCADE DEFAULT NULL,
   integration_name INTEGRATION_TYPE NOT NULL,
   integration_data JSONB DEFAULT NULL, -- Includes access, refresh tokens, etc
   github_installation_id BIGINT UNIQUE DEFAULT NULL -- Only Used for GitHub

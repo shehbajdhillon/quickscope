@@ -28,7 +28,7 @@ func Connnect(args GraphConnectProps) *handler.Server {
 
 	logger := args.Logger
 
-	gqlConfig := Config{Resolvers: &Resolver{Database: args.Queries}}
+	gqlConfig := Config{Resolvers: &Resolver{Database: args.Queries, Logger: args.Logger}}
 
 	gqlConfig.Directives.LoggedIn = func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
 		if isLoggedIn(ctx) == false {

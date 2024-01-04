@@ -1,11 +1,16 @@
 package webhooks
 
 import (
+	"context"
+	"database/sql"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
+	"quickscopedev/database"
 
 	"github.com/google/go-github/v57/github"
+	"github.com/tabbed/pqtype"
 	"go.uber.org/zap"
 )
 
@@ -62,16 +67,36 @@ func (wm *WebhookMiddleware) handleInstallationEvent(event *github.InstallationE
 		)
 	}
 
+	ctx := context.Background()
+
 	// Handling installation event
 	switch event.GetAction() {
 	case "created":
+
 		logMessage("[GITHUB WEBHOOK] App installation created")
+
+		accountInfo, _ := json.Marshal(GithubAccountInfo{
+			AccountName: accountName,
+			AccountType: accountType,
+		})
+
+		wm.database.AddIntegration(ctx, database.AddIntegrationParams{
+			IntegrationName:      database.IntegrationTypeGITHUB,
+			GithubInstallationID: sql.NullInt64{Valid: true, Int64: installationId},
+			IntegrationData:      pqtype.NullRawMessage{Valid: true, RawMessage: accountInfo},
+		})
+
 	case "deleted":
 		logMessage("[GITHUB WEBHOOK] App installation deleted")
+		wm.database.DeleteIntegrationByGitHubInstallationId(
+			ctx, sql.NullInt64{Valid: true, Int64: installationId})
+
 	case "suspended":
 		logMessage("[GITHUB WEBHOOK] App installation suspended")
+
 	case "unsuspended":
 		logMessage("[GITHUB WEBHOOK] App installation unsuspended")
+
 	default:
 		wm.logger.Error(
 			"[GITHUB WEBHOOK] Unknown installation action",

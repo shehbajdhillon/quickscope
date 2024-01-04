@@ -18,6 +18,7 @@ type Query {
 type Mutation {
   createMonitor(input: NewMonitor!): Monitor!
   addIntegration(input: NewIntegration!): Integration!
+  addGithubInstallationId(teamSlug: String! @memberTeam, installationId: Int64!): Integration!
 }
 
 type Team {
@@ -41,9 +42,8 @@ input NewMonitor {
 }
 
 type Integration {
-  id: Int64!
-  teamId: Int64!
   integrationName: String!
+  accountName: String!
 }
 
 input NewIntegration {

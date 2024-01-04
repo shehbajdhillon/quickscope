@@ -6,18 +6,31 @@ package graph
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 	"fmt"
 	"quickscopedev/auth"
 	"quickscopedev/database"
 	"quickscopedev/graph/model"
+	"quickscopedev/webhooks"
+	"time"
+
+	"go.uber.org/zap"
 )
 
-// TeamID is the resolver for the teamId field.
-func (r *integrationResolver) TeamID(ctx context.Context, obj *database.Integration) (int64, error) {
-	if obj.TeamID.Valid == false {
-		return -1, nil
+// IntegrationName is the resolver for the integrationName field.
+func (r *integrationResolver) IntegrationName(ctx context.Context, obj *database.Integration) (string, error) {
+	return string(obj.IntegrationName), nil
+}
+
+// AccountName is the resolver for the accountName field.
+func (r *integrationResolver) AccountName(ctx context.Context, obj *database.Integration) (string, error) {
+	if obj.IntegrationName == database.IntegrationTypeGITHUB {
+		accountInfo := &webhooks.GithubAccountInfo{}
+		json.Unmarshal(obj.IntegrationData.RawMessage, &accountInfo)
+		return accountInfo.AccountName, nil
 	}
-	return obj.TeamID.Int64, nil
+	return "", nil
 }
 
 // CreateMonitor is the resolver for the createMonitor field.
@@ -28,6 +41,33 @@ func (r *mutationResolver) CreateMonitor(ctx context.Context, input model.NewMon
 // AddIntegration is the resolver for the addIntegration field.
 func (r *mutationResolver) AddIntegration(ctx context.Context, input model.NewIntegration) (database.Integration, error) {
 	panic(fmt.Errorf("not implemented: AddIntegration - addIntegration"))
+}
+
+// AddGithubInstallationID is the resolver for the addGithubInstallationId field.
+func (r *mutationResolver) AddGithubInstallationID(ctx context.Context, teamSlug string, installationID int64) (database.Integration, error) {
+	team, _ := r.Database.GetTeamByTeamSlug(ctx, teamSlug)
+
+	// Sometimes the webhook event may have not been fully processed before we try to access the installation id.
+	// So in case of query failure, we can sleep for sometime and try again.
+	retries := 5
+	for retries >= 0 {
+		integration, err := r.Database.UpdateIntegrationTeamIdByGitHubInstallationId(ctx, database.UpdateIntegrationTeamIdByGitHubInstallationIdParams{
+			TeamID:               sql.NullInt64{Valid: true, Int64: team.ID},
+			GithubInstallationID: sql.NullInt64{Valid: true, Int64: installationID},
+		})
+
+		if err == nil {
+			return integration, nil
+		}
+
+		if err != nil {
+			time.Sleep(time.Second * 2)
+			retries -= 1
+			r.Logger.Error("Could not link GitHub Account", zap.Error(err), zap.Int64("installation_id", installationID))
+		}
+	}
+
+	return database.Integration{}, fmt.Errorf("Could not successfully link GitHub account. Please try again.")
 }
 
 // Teams is the resolver for the teams field.

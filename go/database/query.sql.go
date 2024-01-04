@@ -133,6 +133,23 @@ func (q *Queries) CreateNewTeam(ctx context.Context, arg CreateNewTeamParams) (T
 	return i, err
 }
 
+const deleteIntegrationByGitHubInstallationId = `-- name: DeleteIntegrationByGitHubInstallationId :one
+DELETE FROM integration WHERE github_installation_id = $1 RETURNING id, team_id, integration_name, integration_data, github_installation_id
+`
+
+func (q *Queries) DeleteIntegrationByGitHubInstallationId(ctx context.Context, githubInstallationID sql.NullInt64) (Integration, error) {
+	row := q.db.QueryRowContext(ctx, deleteIntegrationByGitHubInstallationId, githubInstallationID)
+	var i Integration
+	err := row.Scan(
+		&i.ID,
+		&i.TeamID,
+		&i.IntegrationName,
+		&i.IntegrationData,
+		&i.GithubInstallationID,
+	)
+	return i, err
+}
+
 const getMonitorByTeamIdAndMonitorSlug = `-- name: GetMonitorByTeamIdAndMonitorSlug :one
 SELECT id, team_id, monitor_slug, monitor_name, created FROM monitor WHERE team_id = $1 and monitor_slug = $2 LIMIT 1
 `

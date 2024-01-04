@@ -28,7 +28,10 @@ func main() {
 	production := os.Getenv("PRODUCTION") != ""
 	Logger := logger.Connect(production)
 	Database := database.Connect(database.DatabaseConnectProps{Logger: Logger})
-	Webhooks := webhooks.Connect(webhooks.WebhookMiddlewareConnectProps{Logger: Logger})
+	Webhooks := webhooks.Connect(webhooks.WebhookMiddlewareConnectProps{
+		Logger:   Logger,
+		Database: Database,
+	})
 
 	srv := graph.Connnect(graph.GraphConnectProps{Logger: Logger, Queries: Database})
 

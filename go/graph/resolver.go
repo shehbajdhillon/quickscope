@@ -1,6 +1,10 @@
 package graph
 
-import "quickscopedev/database"
+import (
+	"quickscopedev/database"
+
+	"go.uber.org/zap"
+)
 
 // This file will not be regenerated automatically.
 //
@@ -10,4 +14,5 @@ import "quickscopedev/database"
 
 type Resolver struct {
 	Database *database.Queries
+	Logger   *zap.Logger
 }

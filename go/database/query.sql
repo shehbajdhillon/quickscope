@@ -61,3 +61,6 @@ VALUES ($1, $2, $3, $4) RETURNING *;
 -- name: UpdateIntegrationTeamIdByGitHubInstallationId :one
 UPDATE integration SET team_id = $1 WHERE github_installation_id = $2 RETURNING *;
 
+-- name: DeleteIntegrationByGitHubInstallationId :one
+DELETE FROM integration WHERE github_installation_id = $1 RETURNING *;
+
