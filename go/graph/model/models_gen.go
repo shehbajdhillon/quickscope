@@ -2,13 +2,12 @@
 
 package model
 
+type NewIntegration struct {
+	TeamID          int64  `json:"teamId"`
+	IntegrationName string `json:"integrationName"`
+}
+
 type NewMonitor struct {
 	TeamID      int64  `json:"teamId"`
 	MonitorName string `json:"monitorName"`
-}
-
-type NewProvider struct {
-	TeamID              int64  `json:"teamId"`
-	ProviderName        string `json:"providerName"`
-	ProviderCredentials string `json:"providerCredentials"`
 }

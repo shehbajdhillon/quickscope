@@ -9,7 +9,52 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"time"
+
+	"github.com/tabbed/pqtype"
 )
+
+type IntegrationType string
+
+const (
+	IntegrationTypeGITHUB     IntegrationType = "GITHUB"
+	IntegrationTypePOSTHOG    IntegrationType = "POSTHOG"
+	IntegrationTypeRAILWAYAPP IntegrationType = "RAILWAYAPP"
+)
+
+func (e *IntegrationType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = IntegrationType(s)
+	case string:
+		*e = IntegrationType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for IntegrationType: %T", src)
+	}
+	return nil
+}
+
+type NullIntegrationType struct {
+	IntegrationType IntegrationType
+	Valid           bool // Valid is true if IntegrationType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullIntegrationType) Scan(value interface{}) error {
+	if value == nil {
+		ns.IntegrationType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.IntegrationType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullIntegrationType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.IntegrationType), nil
+}
 
 type MembershipType string
 
@@ -96,25 +141,20 @@ func (ns NullTeamType) Value() (driver.Value, error) {
 	return string(ns.TeamType), nil
 }
 
+type Integration struct {
+	ID                   int64
+	TeamID               sql.NullInt64
+	IntegrationName      IntegrationType
+	IntegrationData      pqtype.NullRawMessage
+	GithubInstallationID sql.NullInt64
+}
+
 type Monitor struct {
 	ID          int64
 	TeamID      int64
 	MonitorSlug string
 	MonitorName string
 	Created     time.Time
-}
-
-type Provider struct {
-	ID                  int64
-	UserID              int64
-	ProviderName        string
-	ProviderCredentials string
-}
-
-type ProviderIntegration struct {
-	ID     int64
-	TeamID int64
-	UserID int64
 }
 
 type Team struct {
@@ -128,7 +168,7 @@ type Team struct {
 
 type TeamInvite struct {
 	ID           int64
-	Invitecode   string
+	InviteCode   string
 	TeamID       int64
 	InviteeEmail string
 	Created      time.Time

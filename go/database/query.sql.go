@@ -7,7 +7,40 @@ package database
 
 import (
 	"context"
+	"database/sql"
+
+	"github.com/tabbed/pqtype"
 )
+
+const addIntegration = `-- name: AddIntegration :one
+INSERT INTO integration (team_id, integration_name, integration_data, github_installation_id)
+VALUES ($1, $2, $3, $4) RETURNING id, team_id, integration_name, integration_data, github_installation_id
+`
+
+type AddIntegrationParams struct {
+	TeamID               sql.NullInt64
+	IntegrationName      IntegrationType
+	IntegrationData      pqtype.NullRawMessage
+	GithubInstallationID sql.NullInt64
+}
+
+func (q *Queries) AddIntegration(ctx context.Context, arg AddIntegrationParams) (Integration, error) {
+	row := q.db.QueryRowContext(ctx, addIntegration,
+		arg.TeamID,
+		arg.IntegrationName,
+		arg.IntegrationData,
+		arg.GithubInstallationID,
+	)
+	var i Integration
+	err := row.Scan(
+		&i.ID,
+		&i.TeamID,
+		&i.IntegrationName,
+		&i.IntegrationData,
+		&i.GithubInstallationID,
+	)
+	return i, err
+}
 
 const addTeamMembership = `-- name: AddTeamMembership :one
 INSERT INTO team_membership (team_id, user_id, membership_type)
@@ -279,6 +312,28 @@ func (q *Queries) GetUserById(ctx context.Context, id int64) (UserInfo, error) {
 		&i.Email,
 		&i.FullName,
 		&i.Created,
+	)
+	return i, err
+}
+
+const updateIntegrationTeamIdByGitHubInstallationId = `-- name: UpdateIntegrationTeamIdByGitHubInstallationId :one
+UPDATE integration SET team_id = $1 WHERE github_installation_id = $2 RETURNING id, team_id, integration_name, integration_data, github_installation_id
+`
+
+type UpdateIntegrationTeamIdByGitHubInstallationIdParams struct {
+	TeamID               sql.NullInt64
+	GithubInstallationID sql.NullInt64
+}
+
+func (q *Queries) UpdateIntegrationTeamIdByGitHubInstallationId(ctx context.Context, arg UpdateIntegrationTeamIdByGitHubInstallationIdParams) (Integration, error) {
+	row := q.db.QueryRowContext(ctx, updateIntegrationTeamIdByGitHubInstallationId, arg.TeamID, arg.GithubInstallationID)
+	var i Integration
+	err := row.Scan(
+		&i.ID,
+		&i.TeamID,
+		&i.IntegrationName,
+		&i.IntegrationData,
+		&i.GithubInstallationID,
 	)
 	return i, err
 }

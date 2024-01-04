@@ -40,6 +40,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Integration() IntegrationResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 	Team() TeamResolver
@@ -53,6 +54,12 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Integration struct {
+		ID              func(childComplexity int) int
+		IntegrationName func(childComplexity int) int
+		TeamID          func(childComplexity int) int
+	}
+
 	Monitor struct {
 		ID          func(childComplexity int) int
 		MonitorName func(childComplexity int) int
@@ -61,14 +68,8 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddProvider   func(childComplexity int, input model.NewProvider) int
-		CreateMonitor func(childComplexity int, input model.NewMonitor) int
-	}
-
-	Provider struct {
-		ID           func(childComplexity int) int
-		ProviderName func(childComplexity int) int
-		UserID       func(childComplexity int) int
+		AddIntegration func(childComplexity int, input model.NewIntegration) int
+		CreateMonitor  func(childComplexity int, input model.NewMonitor) int
 	}
 
 	Query struct {
@@ -84,9 +85,12 @@ type ComplexityRoot struct {
 	}
 }
 
+type IntegrationResolver interface {
+	TeamID(ctx context.Context, obj *database.Integration) (int64, error)
+}
 type MutationResolver interface {
 	CreateMonitor(ctx context.Context, input model.NewMonitor) (database.Monitor, error)
-	AddProvider(ctx context.Context, input model.NewProvider) (database.Provider, error)
+	AddIntegration(ctx context.Context, input model.NewIntegration) (database.Integration, error)
 }
 type QueryResolver interface {
 	Teams(ctx context.Context, teamSlug *string) ([]database.Team, error)
@@ -114,6 +118,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Integration.id":
+		if e.complexity.Integration.ID == nil {
+			break
+		}
+
+		return e.complexity.Integration.ID(childComplexity), true
+
+	case "Integration.integrationName":
+		if e.complexity.Integration.IntegrationName == nil {
+			break
+		}
+
+		return e.complexity.Integration.IntegrationName(childComplexity), true
+
+	case "Integration.teamId":
+		if e.complexity.Integration.TeamID == nil {
+			break
+		}
+
+		return e.complexity.Integration.TeamID(childComplexity), true
 
 	case "Monitor.id":
 		if e.complexity.Monitor.ID == nil {
@@ -143,17 +168,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Monitor.TeamID(childComplexity), true
 
-	case "Mutation.addProvider":
-		if e.complexity.Mutation.AddProvider == nil {
+	case "Mutation.addIntegration":
+		if e.complexity.Mutation.AddIntegration == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_addProvider_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_addIntegration_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AddProvider(childComplexity, args["input"].(model.NewProvider)), true
+		return e.complexity.Mutation.AddIntegration(childComplexity, args["input"].(model.NewIntegration)), true
 
 	case "Mutation.createMonitor":
 		if e.complexity.Mutation.CreateMonitor == nil {
@@ -166,27 +191,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateMonitor(childComplexity, args["input"].(model.NewMonitor)), true
-
-	case "Provider.id":
-		if e.complexity.Provider.ID == nil {
-			break
-		}
-
-		return e.complexity.Provider.ID(childComplexity), true
-
-	case "Provider.providerName":
-		if e.complexity.Provider.ProviderName == nil {
-			break
-		}
-
-		return e.complexity.Provider.ProviderName(childComplexity), true
-
-	case "Provider.userId":
-		if e.complexity.Provider.UserID == nil {
-			break
-		}
-
-		return e.complexity.Provider.UserID(childComplexity), true
 
 	case "Query.teams":
 		if e.complexity.Query.Teams == nil {
@@ -248,8 +252,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputNewIntegration,
 		ec.unmarshalInputNewMonitor,
-		ec.unmarshalInputNewProvider,
 	)
 	first := true
 
@@ -366,13 +370,13 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Mutation_addProvider_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_addIntegration_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.NewProvider
+	var arg0 model.NewIntegration
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNNewProvider2quickscopedevᚋgraphᚋmodelᚐNewProvider(ctx, tmp)
+		arg0, err = ec.unmarshalNNewIntegration2quickscopedevᚋgraphᚋmodelᚐNewIntegration(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -493,6 +497,138 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _Integration_id(ctx context.Context, field graphql.CollectedField, obj *database.Integration) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Integration_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Integration_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Integration",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Integration_teamId(ctx context.Context, field graphql.CollectedField, obj *database.Integration) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Integration_teamId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Integration().TeamID(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Integration_teamId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Integration",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Integration_integrationName(ctx context.Context, field graphql.CollectedField, obj *database.Integration) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Integration_integrationName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IntegrationName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Integration_integrationName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Integration",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
 
 func (ec *executionContext) _Monitor_id(ctx context.Context, field graphql.CollectedField, obj *database.Monitor) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Monitor_id(ctx, field)
@@ -735,8 +871,8 @@ func (ec *executionContext) fieldContext_Mutation_createMonitor(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_addProvider(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_addProvider(ctx, field)
+func (ec *executionContext) _Mutation_addIntegration(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_addIntegration(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -749,7 +885,7 @@ func (ec *executionContext) _Mutation_addProvider(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddProvider(rctx, fc.Args["input"].(model.NewProvider))
+		return ec.resolvers.Mutation().AddIntegration(rctx, fc.Args["input"].(model.NewIntegration))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -761,12 +897,12 @@ func (ec *executionContext) _Mutation_addProvider(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(database.Provider)
+	res := resTmp.(database.Integration)
 	fc.Result = res
-	return ec.marshalNProvider2quickscopedevᚋdatabaseᚐProvider(ctx, field.Selections, res)
+	return ec.marshalNIntegration2quickscopedevᚋdatabaseᚐIntegration(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_addProvider(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_addIntegration(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -775,13 +911,13 @@ func (ec *executionContext) fieldContext_Mutation_addProvider(ctx context.Contex
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Provider_id(ctx, field)
-			case "userId":
-				return ec.fieldContext_Provider_userId(ctx, field)
-			case "providerName":
-				return ec.fieldContext_Provider_providerName(ctx, field)
+				return ec.fieldContext_Integration_id(ctx, field)
+			case "teamId":
+				return ec.fieldContext_Integration_teamId(ctx, field)
+			case "integrationName":
+				return ec.fieldContext_Integration_integrationName(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Provider", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Integration", field.Name)
 		},
 	}
 	defer func() {
@@ -791,141 +927,9 @@ func (ec *executionContext) fieldContext_Mutation_addProvider(ctx context.Contex
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_addProvider_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_addIntegration_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Provider_id(ctx context.Context, field graphql.CollectedField, obj *database.Provider) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Provider_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int64)
-	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Provider_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Provider",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Provider_userId(ctx context.Context, field graphql.CollectedField, obj *database.Provider) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Provider_userId(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UserID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int64)
-	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Provider_userId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Provider",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Provider_providerName(ctx context.Context, field graphql.CollectedField, obj *database.Provider) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Provider_providerName(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ProviderName, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Provider_providerName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Provider",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
 	}
 	return fc, nil
 }
@@ -3160,6 +3164,53 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputNewIntegration(ctx context.Context, obj interface{}) (model.NewIntegration, error) {
+	var it model.NewIntegration
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"teamId", "integrationName"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "teamId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("teamId"))
+			directive0 := func(ctx context.Context) (interface{}, error) { return ec.unmarshalNInt642int64(ctx, v) }
+			directive1 := func(ctx context.Context) (interface{}, error) {
+				if ec.directives.MemberTeam == nil {
+					return nil, errors.New("directive memberTeam is not implemented")
+				}
+				return ec.directives.MemberTeam(ctx, obj, directive0)
+			}
+
+			tmp, err := directive1(ctx)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			if data, ok := tmp.(int64); ok {
+				it.TeamID = data
+			} else {
+				err := fmt.Errorf(`unexpected type %T from directive, should be int64`, tmp)
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+		case "integrationName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("integrationName"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IntegrationName = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputNewMonitor(ctx context.Context, obj interface{}) (model.NewMonitor, error) {
 	var it model.NewMonitor
 	asMap := map[string]interface{}{}
@@ -3207,60 +3258,6 @@ func (ec *executionContext) unmarshalInputNewMonitor(ctx context.Context, obj in
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputNewProvider(ctx context.Context, obj interface{}) (model.NewProvider, error) {
-	var it model.NewProvider
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"teamId", "providerName", "providerCredentials"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "teamId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("teamId"))
-			directive0 := func(ctx context.Context) (interface{}, error) { return ec.unmarshalNInt642int64(ctx, v) }
-			directive1 := func(ctx context.Context) (interface{}, error) {
-				if ec.directives.MemberTeam == nil {
-					return nil, errors.New("directive memberTeam is not implemented")
-				}
-				return ec.directives.MemberTeam(ctx, obj, directive0)
-			}
-
-			tmp, err := directive1(ctx)
-			if err != nil {
-				return it, graphql.ErrorOnPath(ctx, err)
-			}
-			if data, ok := tmp.(int64); ok {
-				it.TeamID = data
-			} else {
-				err := fmt.Errorf(`unexpected type %T from directive, should be int64`, tmp)
-				return it, graphql.ErrorOnPath(ctx, err)
-			}
-		case "providerName":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("providerName"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ProviderName = data
-		case "providerCredentials":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("providerCredentials"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ProviderCredentials = data
-		}
-	}
-
-	return it, nil
-}
-
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -3268,6 +3265,86 @@ func (ec *executionContext) unmarshalInputNewProvider(ctx context.Context, obj i
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var integrationImplementors = []string{"Integration"}
+
+func (ec *executionContext) _Integration(ctx context.Context, sel ast.SelectionSet, obj *database.Integration) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, integrationImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Integration")
+		case "id":
+			out.Values[i] = ec._Integration_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "teamId":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Integration_teamId(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "integrationName":
+			out.Values[i] = ec._Integration_integrationName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
 
 var monitorImplementors = []string{"Monitor"}
 
@@ -3349,59 +3426,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "addProvider":
+		case "addIntegration":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_addProvider(ctx, field)
+				return ec._Mutation_addIntegration(ctx, field)
 			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var providerImplementors = []string{"Provider"}
-
-func (ec *executionContext) _Provider(ctx context.Context, sel ast.SelectionSet, obj *database.Provider) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, providerImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Provider")
-		case "id":
-			out.Values[i] = ec._Provider_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "userId":
-			out.Values[i] = ec._Provider_userId(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "providerName":
-			out.Values[i] = ec._Provider_providerName(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -3977,6 +4005,10 @@ func (ec *executionContext) marshalNInt642int64(ctx context.Context, sel ast.Sel
 	return res
 }
 
+func (ec *executionContext) marshalNIntegration2quickscopedevᚋdatabaseᚐIntegration(ctx context.Context, sel ast.SelectionSet, v database.Integration) graphql.Marshaler {
+	return ec._Integration(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNMonitor2quickscopedevᚋdatabaseᚐMonitor(ctx context.Context, sel ast.SelectionSet, v database.Monitor) graphql.Marshaler {
 	return ec._Monitor(ctx, sel, &v)
 }
@@ -4025,18 +4057,14 @@ func (ec *executionContext) marshalNMonitor2ᚕquickscopedevᚋdatabaseᚐMonito
 	return ret
 }
 
+func (ec *executionContext) unmarshalNNewIntegration2quickscopedevᚋgraphᚋmodelᚐNewIntegration(ctx context.Context, v interface{}) (model.NewIntegration, error) {
+	res, err := ec.unmarshalInputNewIntegration(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNNewMonitor2quickscopedevᚋgraphᚋmodelᚐNewMonitor(ctx context.Context, v interface{}) (model.NewMonitor, error) {
 	res, err := ec.unmarshalInputNewMonitor(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNNewProvider2quickscopedevᚋgraphᚋmodelᚐNewProvider(ctx context.Context, v interface{}) (model.NewProvider, error) {
-	res, err := ec.unmarshalInputNewProvider(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNProvider2quickscopedevᚋdatabaseᚐProvider(ctx context.Context, sel ast.SelectionSet, v database.Provider) graphql.Marshaler {
-	return ec._Provider(ctx, sel, &v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {

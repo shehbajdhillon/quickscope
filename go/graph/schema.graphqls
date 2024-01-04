@@ -17,7 +17,7 @@ type Query {
 
 type Mutation {
   createMonitor(input: NewMonitor!): Monitor!
-  addProvider(input: NewProvider!): Provider!
+  addIntegration(input: NewIntegration!): Integration!
 }
 
 type Team {
@@ -40,14 +40,13 @@ input NewMonitor {
   monitorName: String!
 }
 
-type Provider {
+type Integration {
   id: Int64!
-  userId: Int64!
-  providerName: String!
+  teamId: Int64!
+  integrationName: String!
 }
 
-input NewProvider {
+input NewIntegration {
   teamId: Int64! @memberTeam
-  providerName: String!
-  providerCredentials: String!
+  integrationName: String!
 }

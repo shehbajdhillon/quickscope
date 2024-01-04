@@ -12,14 +12,22 @@ import (
 	"quickscopedev/graph/model"
 )
 
+// TeamID is the resolver for the teamId field.
+func (r *integrationResolver) TeamID(ctx context.Context, obj *database.Integration) (int64, error) {
+	if obj.TeamID.Valid == false {
+		return -1, nil
+	}
+	return obj.TeamID.Int64, nil
+}
+
 // CreateMonitor is the resolver for the createMonitor field.
 func (r *mutationResolver) CreateMonitor(ctx context.Context, input model.NewMonitor) (database.Monitor, error) {
 	panic(fmt.Errorf("not implemented: CreateMonitor - createMonitor"))
 }
 
-// AddProvider is the resolver for the addProvider field.
-func (r *mutationResolver) AddProvider(ctx context.Context, input model.NewProvider) (database.Provider, error) {
-	panic(fmt.Errorf("not implemented: AddProvider - addProvider"))
+// AddIntegration is the resolver for the addIntegration field.
+func (r *mutationResolver) AddIntegration(ctx context.Context, input model.NewIntegration) (database.Integration, error) {
+	panic(fmt.Errorf("not implemented: AddIntegration - addIntegration"))
 }
 
 // Teams is the resolver for the teams field.
@@ -59,6 +67,9 @@ func (r *teamResolver) Monitors(ctx context.Context, obj *database.Team, monitor
 	return r.Database.GetMonitorsByTeamId(ctx, obj.ID)
 }
 
+// Integration returns IntegrationResolver implementation.
+func (r *Resolver) Integration() IntegrationResolver { return &integrationResolver{r} }
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
@@ -68,6 +79,7 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 // Team returns TeamResolver implementation.
 func (r *Resolver) Team() TeamResolver { return &teamResolver{r} }
 
+type integrationResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type teamResolver struct{ *Resolver }

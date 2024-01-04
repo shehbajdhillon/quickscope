@@ -4,6 +4,9 @@ CREATE TYPE team_type AS ENUM ('PERSONAL', 'TEAM');
 DROP TYPE IF EXISTS membership_type CASCADE;
 CREATE TYPE membership_type AS ENUM ('OWNER', 'ADMIN', 'MEMBER');
 
+DROP TYPE IF EXISTS integration_type CASCADE;
+CREATE TYPE integration_type AS ENUM ('GITHUB', 'POSTHOG', 'RAILWAYAPP');
+
 DROP TABLE IF EXISTS user_info CASCADE;
 CREATE TABLE user_info (
   id BIGSERIAL PRIMARY KEY NOT NULL,
@@ -43,7 +46,7 @@ CREATE TABLE team_membership (
 DROP TABLE IF EXISTS team_invite CASCADE;
 CREATE TABLE team_invite (
   id BIGSERIAL PRIMARY KEY NOT NULL,
-  inviteCode TEXT UNIQUE NOT NULL,
+  invite_code TEXT UNIQUE NOT NULL,
   team_id BIGINT REFERENCES team (id) ON DELETE CASCADE NOT NULL,
   invitee_email TEXT NOT NULL,
   created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -60,17 +63,12 @@ CREATE TABLE monitor (
   UNIQUE (team_id, monitor_slug)
 );
 
-DROP TABLE IF EXISTS provider_integration CASCADE;
-CREATE TABLE provider_integration (
+DROP TABLE IF EXISTS integration CASCADE;
+CREATE TABLE integration (
   id BIGSERIAL PRIMARY KEY NOT NULL,
-  team_id BIGINT REFERENCES team (id) ON DELETE CASCADE NOT NULL,
-  user_id BIGINT UNIQUE REFERENCES user_info (id) ON DELETE CASCADE NOT NULL
+  team_id BIGINT UNIQUE REFERENCES user_info (id) ON DELETE CASCADE DEFAULT NULL,
+  integration_name INTEGRATION_TYPE NOT NULL,
+  integration_data JSONB DEFAULT NULL, -- Includes access, refresh tokens, etc
+  github_installation_id BIGINT UNIQUE DEFAULT NULL -- Only Used for GitHub
 );
 
-DROP TABLE IF EXISTS provider CASCADE;
-CREATE TABLE provider (
-  id BIGSERIAL PRIMARY KEY NOT NULL,
-  user_id BIGINT UNIQUE REFERENCES user_info (id) ON DELETE CASCADE NOT NULL,
-  provider_name TEXT NOT NULL,
-  provider_credentials TEXT NOT NULL
-);
