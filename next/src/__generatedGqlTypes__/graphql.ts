@@ -19,6 +19,12 @@ export type Scalars = {
   Upload: { input: any; output: any; }
 };
 
+export type Integration = {
+  __typename?: 'Integration';
+  accountName: Scalars['String']['output'];
+  integrationName: Scalars['String']['output'];
+};
+
 export type Monitor = {
   __typename?: 'Monitor';
   id: Scalars['Int64']['output'];
@@ -29,13 +35,20 @@ export type Monitor = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  addProvider: Provider;
+  addGithubInstallationId: Integration;
+  addIntegration: Integration;
   createMonitor: Monitor;
 };
 
 
-export type MutationAddProviderArgs = {
-  input: NewProvider;
+export type MutationAddGithubInstallationIdArgs = {
+  installationId: Scalars['Int64']['input'];
+  teamSlug: Scalars['String']['input'];
+};
+
+
+export type MutationAddIntegrationArgs = {
+  input: NewIntegration;
 };
 
 
@@ -43,22 +56,14 @@ export type MutationCreateMonitorArgs = {
   input: NewMonitor;
 };
 
+export type NewIntegration = {
+  integrationName: Scalars['String']['input'];
+  teamId: Scalars['Int64']['input'];
+};
+
 export type NewMonitor = {
   monitorName: Scalars['String']['input'];
   teamId: Scalars['Int64']['input'];
-};
-
-export type NewProvider = {
-  providerCredentials: Scalars['String']['input'];
-  providerName: Scalars['String']['input'];
-  teamId: Scalars['Int64']['input'];
-};
-
-export type Provider = {
-  __typename?: 'Provider';
-  id: Scalars['Int64']['output'];
-  providerName: Scalars['String']['output'];
-  userId: Scalars['Int64']['output'];
 };
 
 export type Query = {
@@ -90,5 +95,14 @@ export type GetTeamSlugsQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type GetTeamSlugsQuery = { __typename?: 'Query', teams: Array<{ __typename?: 'Team', teamSlug: string }> };
 
+export type LinkGitHubAccountMutationVariables = Exact<{
+  teamSlug: Scalars['String']['input'];
+  installationId: Scalars['Int64']['input'];
+}>;
+
+
+export type LinkGitHubAccountMutation = { __typename?: 'Mutation', addGithubInstallationId: { __typename?: 'Integration', accountName: string } };
+
 
 export const GetTeamSlugsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetTeamSlugs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teams"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teamSlug"}}]}}]}}]} as unknown as DocumentNode<GetTeamSlugsQuery, GetTeamSlugsQueryVariables>;
+export const LinkGitHubAccountDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"LinkGitHubAccount"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"teamSlug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"installationId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int64"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"addGithubInstallationId"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"teamSlug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"teamSlug"}}},{"kind":"Argument","name":{"kind":"Name","value":"installationId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"installationId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accountName"}}]}}]}}]} as unknown as DocumentNode<LinkGitHubAccountMutation, LinkGitHubAccountMutationVariables>;

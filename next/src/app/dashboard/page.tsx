@@ -1,16 +1,8 @@
 import { GetTeamSlugsQuery } from "@/__generatedGqlTypes__/graphql";
 import { GetApolloClient } from "@/apollo-client";
-import { gql } from "@apollo/client";
 import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
-
-const GET_TEAM_SLUGS = gql`
-  query GetTeamSlugs {
-    teams {
-      teamSlug
-    }
-  }
-`;
+import { GET_TEAM_SLUGS } from "./gql";
 
 export default async function Page() {
   const { getToken } = auth();
