@@ -5,7 +5,13 @@ import { Card, CardBody, CardDescription, CardFooter, CardHeader, CardTitle } fr
 import { Input } from "@/components/ui/input";
 import { css } from "@/styled-system/css";
 import { Stack, HStack, Spacer, VStack } from "@/styled-system/jsx";
-import { ArrowRightIcon, CheckIcon, ChevronsUpDownIcon, ExternalLinkIcon } from "lucide-react";
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  CheckIcon,
+  ChevronsUpDownIcon,
+  ExternalLinkIcon
+} from "lucide-react";
 
 import { useEffect, useState } from "react";
 
@@ -15,9 +21,14 @@ import { Link } from "@/components/ui/link";
 
 import { validatePostHogAPIKey, validateRailwayAPIKey } from "./actions";
 import { openPopUpWindow } from "@/utils";
+import { Badge } from "@/components/ui/badge";
+import { Code } from "@/components/ui/code";
 
 
 const NewPage = () => {
+
+  const [currentStep, setCurrentStep] = useState(0);
+
   return (
     <Stack gap={"20px"} justifyContent={"center"}>
 
@@ -27,29 +38,103 @@ const NewPage = () => {
           To setup a new monitor, import a git repository and an observability source.
         </p>
       </Stack>
+
       <VStack>
-        <Stack direction={"column"}>
-          <Stack
-            direction={{ base: "column", md: "row" }}
-            gap="30px"
-          >
-            <Stack maxWidth={{ md: "672px" }} w="full">
-              <GithubImportBox />
-            </Stack>
-            <Stack maxWidth={{ md: "672px" }} w="full">
-              <ObservabilityImportBox />
-            </Stack>
-          </Stack>
-          <HStack pt="15px">
-            <Spacer />
-            <Button>
-              Continue
-              <ArrowRightIcon />
-            </Button>
+        <VStack maxW="1020px" w="full">
+
+          <HStack w="full" justifyContent={"space-between"}>
+            {[
+              "Connect Repository",
+              "Connect Observability Source",
+              "Deploy",
+             ].map((step, idx) => (
+              <VStack w="full" key={idx}>
+                <Badge
+                  variant={currentStep >= idx ? "solid" : "outline"}
+                  size={"lg"}
+                >
+                  {idx + 1}
+                </Badge>
+                <text className={css({ textAlign: "center" })}>
+                  {step}
+                </text>
+              </VStack>
+            ))}
           </HStack>
-        </Stack>
+
+            <Stack maxWidth={{ md: "560px" }} w="full">
+              { currentStep == 0 && <GithubImportBox /> }
+              { currentStep == 1 && <ObservabilityImportBox /> }
+              { currentStep == 2 && <MonitorReviewBox /> }
+            </Stack>
+
+            <HStack pt="15px" w="full" maxWidth={{ md: "560px" }}>
+              <Spacer />
+              <Button onClick={() => setCurrentStep(curr => Math.max(curr - 1, 0))}>
+                <ArrowLeftIcon />
+                Back
+              </Button>
+              <Button onClick={() => setCurrentStep(curr => Math.min(curr + 1, 2))}>
+                Continue
+                <ArrowRightIcon />
+              </Button>
+            </HStack>
+
+        </VStack>
       </VStack>
     </Stack>
+  );
+};
+
+const MonitorReviewBox = () => {
+  return (
+    <Card w="full">
+      <CardHeader>
+        <CardTitle>Deploy Monitor</CardTitle>
+        <CardDescription>
+          Give your monitor a name and review your selected options.
+        </CardDescription>
+      </CardHeader>
+      <CardBody gap={"20px"}>
+        <HStack>
+          <Input placeholder="Monitor Name" />
+        </HStack>
+
+        <Stack>
+          <text className={css({ fontWeight: "medium" })}>
+            Repository Connected
+          </text>
+          <MenuSeparator />
+          <HStack>
+            <text>PlanetCast</text>
+            <Spacer />
+            <Code>shehbajdhillon</Code>
+          </HStack>
+        </Stack>
+
+        <Stack>
+          <text className={css({ fontWeight: "medium" })}>
+            Observability Sources Connected
+          </text>
+          <MenuSeparator />
+          <HStack>
+            <text>PostHog</text>
+            <Spacer />
+            <Code>****HGF2</Code>
+          </HStack>
+          <HStack>
+            <text>Vercel</text>
+            <Spacer />
+            <Code>syncsoftware</Code>
+          </HStack>
+          <HStack>
+            <text>Railway</text>
+            <Spacer />
+            <Code>****FWEF3</Code>
+          </HStack>
+        </Stack>
+      </CardBody>
+    </Card>
   );
 };
 
@@ -71,7 +156,7 @@ const ObservabilityImportBox = () => {
   };
 
   return (
-    <Card borderColor={"red"}>
+    <Card w="full">
       <CardHeader>
         <CardTitle>Import Observability Source</CardTitle>
         <CardDescription>
@@ -269,7 +354,7 @@ const GithubImportBox = () => {
 
 
   return (
-    <Card borderColor={"red"}>
+    <Card w="full">
       <CardHeader>
         <CardTitle>Import Git Repository</CardTitle>
         <CardDescription>
