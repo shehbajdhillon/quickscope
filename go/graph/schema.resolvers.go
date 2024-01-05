@@ -28,6 +28,14 @@ func (r *integrationResolver) AccountName(ctx context.Context, obj *database.Int
 	return "", nil
 }
 
+// GithubInstallationID is the resolver for the GithubInstallationId field.
+func (r *integrationResolver) GithubInstallationID(ctx context.Context, obj *database.Integration) (int64, error) {
+	if obj.GithubInstallationID.Valid == false {
+		return -1, nil
+	}
+	return obj.GithubInstallationID.Int64, nil
+}
+
 // CreateMonitor is the resolver for the createMonitor field.
 func (r *mutationResolver) CreateMonitor(ctx context.Context, input model.NewMonitor) (database.Monitor, error) {
 	panic(fmt.Errorf("not implemented: CreateMonitor - createMonitor"))
@@ -104,7 +112,6 @@ func (r *teamResolver) Monitors(ctx context.Context, obj *database.Team, monitor
 
 // Integrations is the resolver for the integrations field.
 func (r *teamResolver) Integrations(ctx context.Context, obj *database.Team, integrationID *int64, integrationName *database.IntegrationType) ([]database.Integration, error) {
-
 	if integrationID != nil && integrationName != nil {
 		integration, _ := r.Database.GetIntegrationByTeamIdIntegrationIdIntegrationName(ctx, database.GetIntegrationByTeamIdIntegrationIdIntegrationNameParams{
 			ID:              *integrationID,
@@ -131,7 +138,6 @@ func (r *teamResolver) Integrations(ctx context.Context, obj *database.Team, int
 	}
 
 	return r.Database.GetIntegrationsByTeamId(ctx, sql.NullInt64{Valid: true, Int64: obj.ID})
-
 }
 
 // Integration returns IntegrationResolver implementation.

@@ -22,8 +22,15 @@ export type Scalars = {
 export type Integration = {
   __typename?: 'Integration';
   accountName: Scalars['String']['output'];
-  integrationName: Scalars['String']['output'];
+  githubInstallationId: Scalars['Int64']['output'];
+  integrationName: IntegrationType;
 };
+
+export enum IntegrationType {
+  Github = 'GITHUB',
+  Posthog = 'POSTHOG',
+  Railwayapp = 'RAILWAYAPP'
+}
 
 export type Monitor = {
   __typename?: 'Monitor';
@@ -57,7 +64,7 @@ export type MutationCreateMonitorArgs = {
 };
 
 export type NewIntegration = {
-  integrationName: Scalars['String']['input'];
+  integrationName: IntegrationType;
   teamId: Scalars['Int64']['input'];
 };
 
@@ -79,6 +86,7 @@ export type QueryTeamsArgs = {
 export type Team = {
   __typename?: 'Team';
   id: Scalars['Int64']['output'];
+  integrations: Array<Integration>;
   monitors: Array<Monitor>;
   teamName: Scalars['String']['output'];
   teamSlug: Scalars['String']['output'];
@@ -86,9 +94,22 @@ export type Team = {
 };
 
 
+export type TeamIntegrationsArgs = {
+  integrationId?: InputMaybe<Scalars['Int64']['input']>;
+  integrationName?: InputMaybe<IntegrationType>;
+};
+
+
 export type TeamMonitorsArgs = {
   monitorSlug?: InputMaybe<Scalars['String']['input']>;
 };
+
+export type GetLinkedGitHubAccountsQueryVariables = Exact<{
+  teamSlug: Scalars['String']['input'];
+}>;
+
+
+export type GetLinkedGitHubAccountsQuery = { __typename?: 'Query', teams: Array<{ __typename?: 'Team', integrations: Array<{ __typename?: 'Integration', accountName: string, integrationName: IntegrationType, githubInstallationId: any }> }> };
 
 export type GetTeamSlugsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -104,5 +125,6 @@ export type LinkGitHubAccountMutationVariables = Exact<{
 export type LinkGitHubAccountMutation = { __typename?: 'Mutation', addGithubInstallationId: { __typename?: 'Integration', accountName: string } };
 
 
+export const GetLinkedGitHubAccountsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetLinkedGitHubAccounts"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"teamSlug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teams"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"teamSlug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"teamSlug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"integrations"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"integrationName"},"value":{"kind":"EnumValue","value":"GITHUB"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accountName"}},{"kind":"Field","name":{"kind":"Name","value":"integrationName"}},{"kind":"Field","name":{"kind":"Name","value":"githubInstallationId"}}]}}]}}]}}]} as unknown as DocumentNode<GetLinkedGitHubAccountsQuery, GetLinkedGitHubAccountsQueryVariables>;
 export const GetTeamSlugsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetTeamSlugs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teams"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teamSlug"}}]}}]}}]} as unknown as DocumentNode<GetTeamSlugsQuery, GetTeamSlugsQueryVariables>;
 export const LinkGitHubAccountDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"LinkGitHubAccount"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"teamSlug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"installationId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int64"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"addGithubInstallationId"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"teamSlug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"teamSlug"}}},{"kind":"Argument","name":{"kind":"Name","value":"installationId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"installationId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accountName"}}]}}]}}]} as unknown as DocumentNode<LinkGitHubAccountMutation, LinkGitHubAccountMutationVariables>;

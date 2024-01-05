@@ -45,6 +45,7 @@ input NewMonitor {
 type Integration {
   accountName: String!
   integrationName: IntegrationType!
+  githubInstallationId: Int64!
 }
 
 input NewIntegration {

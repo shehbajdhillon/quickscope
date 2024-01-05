@@ -13,6 +13,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Therefore it is highly recommended to use the babel or swc plugin for production.
  */
 const documents = {
+    "\n  query GetLinkedGitHubAccounts($teamSlug: String!) {\n    teams(teamSlug: $teamSlug) {\n      integrations(integrationName: GITHUB) {\n        accountName\n        integrationName\n        githubInstallationId\n      }\n    }\n  }\n": types.GetLinkedGitHubAccountsDocument,
     "\n  query GetTeamSlugs {\n    teams {\n      teamSlug\n    }\n  }\n": types.GetTeamSlugsDocument,
     "\n  mutation LinkGitHubAccount($teamSlug: String!, $installationId: Int64!) {\n    addGithubInstallationId(teamSlug: $teamSlug, installationId: $installationId) {\n      accountName\n    }\n  }\n": types.LinkGitHubAccountDocument,
 };
@@ -31,6 +32,10 @@ const documents = {
  */
 export function graphql(source: string): unknown;
 
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetLinkedGitHubAccounts($teamSlug: String!) {\n    teams(teamSlug: $teamSlug) {\n      integrations(integrationName: GITHUB) {\n        accountName\n        integrationName\n        githubInstallationId\n      }\n    }\n  }\n"): (typeof documents)["\n  query GetLinkedGitHubAccounts($teamSlug: String!) {\n    teams(teamSlug: $teamSlug) {\n      integrations(integrationName: GITHUB) {\n        accountName\n        integrationName\n        githubInstallationId\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

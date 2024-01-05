@@ -23,11 +23,28 @@ import { validatePostHogAPIKey, validateRailwayAPIKey } from "./actions";
 import { openPopUpWindow } from "@/utils";
 import { Badge } from "@/components/ui/badge";
 import { Code } from "@/components/ui/code";
+import { gql, useQuery } from "@apollo/client";
+import { GetLinkedGitHubAccountsQuery } from "@/__generatedGqlTypes__/graphql";
+import { useParams } from "next/navigation";
+
+const GET_LINKED_GITHUB_ACCOUNTS = gql`
+  query GetLinkedGitHubAccounts($teamSlug: String!) {
+    teams(teamSlug: $teamSlug) {
+      integrations(integrationName: GITHUB) {
+        accountName
+        integrationName
+        githubInstallationId
+      }
+    }
+  }
+`;
 
 
 const NewPage = () => {
 
   const [currentStep, setCurrentStep] = useState(0);
+
+  const params = useParams();
 
   return (
     <Stack gap={"20px"} justifyContent={"center"}>
@@ -63,7 +80,7 @@ const NewPage = () => {
           </HStack>
 
             <Stack maxWidth={{ md: "560px" }} w="full">
-              { currentStep == 0 && <GithubImportBox /> }
+              { currentStep == 0 && <GithubImportBox teamSlug={params.teamSlug as string} /> }
               { currentStep == 1 && <ObservabilityImportBox /> }
               { currentStep == 2 && <MonitorReviewBox /> }
             </Stack>
@@ -329,16 +346,7 @@ const RailwayAppImportBox: React.FC<ImportBoxProps> = ({ pushKey }) => {
 };
 
 
-const GithubImportBox = () => {
-
-  const items = [
-    { label: 'shehbajdhillon', value: 'shehbajdhillon' },
-    { label: 'jointaro', value: 'jointaro' },
-    { label: 'spendsense', value: 'spendsense'},
-    { label: 'interviewingio', value: 'interviewingio' },
-  ]
-
-  const [gitAccount, setGitAccount] = useState(items[0].value);
+const GithubImportBox = (props: { teamSlug: string }) => {
 
   const openGithubPopUp = () => {
     const githubAppInstallationUrl =
@@ -347,11 +355,22 @@ const GithubImportBox = () => {
     const checkChildWindow = setInterval(() => {
       if (window?.closed) {
         clearInterval(checkChildWindow);
-        alert("Window has been closed");
+        refetch();
       }
     }, 1000);
   };
 
+  const { data, loading, error, refetch }
+    = useQuery<GetLinkedGitHubAccountsQuery>(
+    GET_LINKED_GITHUB_ACCOUNTS, { variables: { teamSlug: props.teamSlug } });
+
+  const accounts = data?.teams[0].integrations;
+
+  const items = accounts?.map(acc => { return { label: acc.accountName, value: acc.accountName, installationId: acc.githubInstallationId } } );
+
+  const [gitAccount, setGitAccount] = useState(items?.[0].value);
+
+  useEffect(() => { console.log({ data, loading, error }) }, [loading, data, error]);
 
   return (
     <Card w="full">
@@ -362,13 +381,14 @@ const GithubImportBox = () => {
         </CardDescription>
       </CardHeader>
       <CardBody gap={"20px"}>
-
+        { items &&
         <HStack>
           <Select.Root
             positioning={{ sameWidth: true }}
             items={items}
             defaultValue={[items[0].value]}
             onValueChange={(event) => setGitAccount(event.value[0])}
+            hidden={items.length == 0}
           >
             <Select.Control>
               <Select.Trigger>
@@ -394,6 +414,7 @@ const GithubImportBox = () => {
           </Select.Root>
           <Input placeholder="Search" />
         </HStack>
+        }
         <Button w="max" onClick={openGithubPopUp}>
           {"+ Add New GitHub Account"}
         </Button>
