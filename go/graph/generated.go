@@ -77,16 +77,16 @@ type ComplexityRoot struct {
 	}
 
 	Team struct {
-		ID       func(childComplexity int) int
-		Monitors func(childComplexity int, monitorSlug *string) int
-		TeamName func(childComplexity int) int
-		TeamSlug func(childComplexity int) int
-		TeamType func(childComplexity int) int
+		ID           func(childComplexity int) int
+		Integrations func(childComplexity int, integrationID *int64, integrationName *database.IntegrationType) int
+		Monitors     func(childComplexity int, monitorSlug *string) int
+		TeamName     func(childComplexity int) int
+		TeamSlug     func(childComplexity int) int
+		TeamType     func(childComplexity int) int
 	}
 }
 
 type IntegrationResolver interface {
-	IntegrationName(ctx context.Context, obj *database.Integration) (string, error)
 	AccountName(ctx context.Context, obj *database.Integration) (string, error)
 }
 type MutationResolver interface {
@@ -100,6 +100,7 @@ type QueryResolver interface {
 type TeamResolver interface {
 	TeamType(ctx context.Context, obj *database.Team) (string, error)
 	Monitors(ctx context.Context, obj *database.Team, monitorSlug *string) ([]database.Monitor, error)
+	Integrations(ctx context.Context, obj *database.Team, integrationID *int64, integrationName *database.IntegrationType) ([]database.Integration, error)
 }
 
 type executableSchema struct {
@@ -217,6 +218,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Team.ID(childComplexity), true
+
+	case "Team.integrations":
+		if e.complexity.Team.Integrations == nil {
+			break
+		}
+
+		args, err := ec.field_Team_integrations_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Team.Integrations(childComplexity, args["integrationId"].(*int64), args["integrationName"].(*database.IntegrationType)), true
 
 	case "Team.monitors":
 		if e.complexity.Team.Monitors == nil {
@@ -489,6 +502,30 @@ func (ec *executionContext) field_Query_teams_args(ctx context.Context, rawArgs 
 	return args, nil
 }
 
+func (ec *executionContext) field_Team_integrations_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int64
+	if tmp, ok := rawArgs["integrationId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("integrationId"))
+		arg0, err = ec.unmarshalOInt642ᚖint64(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["integrationId"] = arg0
+	var arg1 *database.IntegrationType
+	if tmp, ok := rawArgs["integrationName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("integrationName"))
+		arg1, err = ec.unmarshalOIntegrationType2ᚖquickscopedevᚋdatabaseᚐIntegrationType(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["integrationName"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Team_monitors_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -542,50 +579,6 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Integration_integrationName(ctx context.Context, field graphql.CollectedField, obj *database.Integration) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Integration_integrationName(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Integration().IntegrationName(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Integration_integrationName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Integration",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Integration_accountName(ctx context.Context, field graphql.CollectedField, obj *database.Integration) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Integration_accountName(ctx, field)
 	if err != nil {
@@ -625,6 +618,50 @@ func (ec *executionContext) fieldContext_Integration_accountName(ctx context.Con
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Integration_integrationName(ctx context.Context, field graphql.CollectedField, obj *database.Integration) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Integration_integrationName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IntegrationName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(database.IntegrationType)
+	fc.Result = res
+	return ec.marshalNIntegrationType2quickscopedevᚋdatabaseᚐIntegrationType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Integration_integrationName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Integration",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type IntegrationType does not have child fields")
 		},
 	}
 	return fc, nil
@@ -910,10 +947,10 @@ func (ec *executionContext) fieldContext_Mutation_addIntegration(ctx context.Con
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "integrationName":
-				return ec.fieldContext_Integration_integrationName(ctx, field)
 			case "accountName":
 				return ec.fieldContext_Integration_accountName(ctx, field)
+			case "integrationName":
+				return ec.fieldContext_Integration_integrationName(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Integration", field.Name)
 		},
@@ -971,10 +1008,10 @@ func (ec *executionContext) fieldContext_Mutation_addGithubInstallationId(ctx co
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "integrationName":
-				return ec.fieldContext_Integration_integrationName(ctx, field)
 			case "accountName":
 				return ec.fieldContext_Integration_accountName(ctx, field)
+			case "integrationName":
+				return ec.fieldContext_Integration_integrationName(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Integration", field.Name)
 		},
@@ -1062,6 +1099,8 @@ func (ec *executionContext) fieldContext_Query_teams(ctx context.Context, field 
 				return ec.fieldContext_Team_teamType(ctx, field)
 			case "monitors":
 				return ec.fieldContext_Team_monitors(ctx, field)
+			case "integrations":
+				return ec.fieldContext_Team_integrations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Team", field.Name)
 		},
@@ -1444,6 +1483,67 @@ func (ec *executionContext) fieldContext_Team_monitors(ctx context.Context, fiel
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Team_monitors_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Team_integrations(ctx context.Context, field graphql.CollectedField, obj *database.Team) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Team_integrations(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Team().Integrations(rctx, obj, fc.Args["integrationId"].(*int64), fc.Args["integrationName"].(*database.IntegrationType))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]database.Integration)
+	fc.Result = res
+	return ec.marshalNIntegration2ᚕquickscopedevᚋdatabaseᚐIntegrationᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Team_integrations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Team",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "accountName":
+				return ec.fieldContext_Integration_accountName(ctx, field)
+			case "integrationName":
+				return ec.fieldContext_Integration_integrationName(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Integration", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Team_integrations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -3259,7 +3359,7 @@ func (ec *executionContext) unmarshalInputNewIntegration(ctx context.Context, ob
 			}
 		case "integrationName":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("integrationName"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalNIntegrationType2quickscopedevᚋdatabaseᚐIntegrationType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3336,42 +3436,6 @@ func (ec *executionContext) _Integration(ctx context.Context, sel ast.SelectionS
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Integration")
-		case "integrationName":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Integration_integrationName(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "accountName":
 			field := field
 
@@ -3408,6 +3472,11 @@ func (ec *executionContext) _Integration(ctx context.Context, sel ast.SelectionS
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "integrationName":
+			out.Values[i] = ec._Integration_integrationName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3692,6 +3761,42 @@ func (ec *executionContext) _Team(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._Team_monitors(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "integrations":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Team_integrations(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -4101,6 +4206,66 @@ func (ec *executionContext) marshalNIntegration2quickscopedevᚋdatabaseᚐInteg
 	return ec._Integration(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNIntegration2ᚕquickscopedevᚋdatabaseᚐIntegrationᚄ(ctx context.Context, sel ast.SelectionSet, v []database.Integration) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNIntegration2quickscopedevᚋdatabaseᚐIntegration(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalNIntegrationType2quickscopedevᚋdatabaseᚐIntegrationType(ctx context.Context, v interface{}) (database.IntegrationType, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := database.IntegrationType(tmp)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNIntegrationType2quickscopedevᚋdatabaseᚐIntegrationType(ctx context.Context, sel ast.SelectionSet, v database.IntegrationType) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) marshalNMonitor2quickscopedevᚋdatabaseᚐMonitor(ctx context.Context, sel ast.SelectionSet, v database.Monitor) graphql.Marshaler {
 	return ec._Monitor(ctx, sel, &v)
 }
@@ -4498,6 +4663,39 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	res := graphql.MarshalBoolean(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOInt642ᚖint64(ctx context.Context, v interface{}) (*int64, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt64(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt642ᚖint64(ctx context.Context, sel ast.SelectionSet, v *int64) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt64(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOIntegrationType2ᚖquickscopedevᚋdatabaseᚐIntegrationType(ctx context.Context, v interface{}) (*database.IntegrationType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	tmp, err := graphql.UnmarshalString(v)
+	res := database.IntegrationType(tmp)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOIntegrationType2ᚖquickscopedevᚋdatabaseᚐIntegrationType(ctx context.Context, sel ast.SelectionSet, v *database.IntegrationType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalString(string(*v))
 	return res
 }
 

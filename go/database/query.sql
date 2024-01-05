@@ -64,3 +64,14 @@ UPDATE integration SET team_id = $1 WHERE github_installation_id = $2 RETURNING 
 -- name: DeleteIntegrationByGitHubInstallationId :one
 DELETE FROM integration WHERE github_installation_id = $1 RETURNING *;
 
+-- name: GetIntegrationsByTeamId :many
+SELECT * FROM integration WHERE team_id = $1;
+
+-- name: GetIntegrationsByTeamIdIntegrationName :many
+SELECT * FROM integration WHERE team_id = $1 AND integration_name = $2;
+
+-- name: GetIntegrationByTeamIdIntegrationId :one
+SELECT * FROM integration WHERE team_id = $1 AND id = $2;
+
+-- name: GetIntegrationByTeamIdIntegrationIdIntegrationName :one
+SELECT * FROM integration WHERE team_id = $1 AND id = $2 AND integration_name = $3;

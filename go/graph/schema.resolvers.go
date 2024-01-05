@@ -18,11 +18,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// IntegrationName is the resolver for the integrationName field.
-func (r *integrationResolver) IntegrationName(ctx context.Context, obj *database.Integration) (string, error) {
-	return string(obj.IntegrationName), nil
-}
-
 // AccountName is the resolver for the accountName field.
 func (r *integrationResolver) AccountName(ctx context.Context, obj *database.Integration) (string, error) {
 	if obj.IntegrationName == database.IntegrationTypeGITHUB {
@@ -105,6 +100,38 @@ func (r *teamResolver) Monitors(ctx context.Context, obj *database.Team, monitor
 	}
 
 	return r.Database.GetMonitorsByTeamId(ctx, obj.ID)
+}
+
+// Integrations is the resolver for the integrations field.
+func (r *teamResolver) Integrations(ctx context.Context, obj *database.Team, integrationID *int64, integrationName *database.IntegrationType) ([]database.Integration, error) {
+
+	if integrationID != nil && integrationName != nil {
+		integration, _ := r.Database.GetIntegrationByTeamIdIntegrationIdIntegrationName(ctx, database.GetIntegrationByTeamIdIntegrationIdIntegrationNameParams{
+			ID:              *integrationID,
+			TeamID:          sql.NullInt64{Valid: true, Int64: obj.ID},
+			IntegrationName: *integrationName,
+		})
+		return []database.Integration{integration}, nil
+	}
+
+	if integrationID != nil {
+		integration, _ := r.Database.GetIntegrationByTeamIdIntegrationId(ctx, database.GetIntegrationByTeamIdIntegrationIdParams{
+			ID:     *integrationID,
+			TeamID: sql.NullInt64{Valid: true, Int64: obj.ID},
+		})
+		return []database.Integration{integration}, nil
+	}
+
+	if integrationName != nil {
+		integrations, _ := r.Database.GetIntegrationsByTeamIdIntegrationName(ctx, database.GetIntegrationsByTeamIdIntegrationNameParams{
+			IntegrationName: *integrationName,
+			TeamID:          sql.NullInt64{Valid: true, Int64: obj.ID},
+		})
+		return integrations, nil
+	}
+
+	return r.Database.GetIntegrationsByTeamId(ctx, sql.NullInt64{Valid: true, Int64: obj.ID})
+
 }
 
 // Integration returns IntegrationResolver implementation.

@@ -27,6 +27,7 @@ type Team {
   teamName: String!
   teamType: String!
   monitors(monitorSlug: String): [Monitor!]!
+  integrations(integrationId: Int64, integrationName: IntegrationType): [Integration!]!
 }
 
 type Monitor {
@@ -42,11 +43,17 @@ input NewMonitor {
 }
 
 type Integration {
-  integrationName: String!
   accountName: String!
+  integrationName: IntegrationType!
 }
 
 input NewIntegration {
   teamId: Int64! @memberTeam
-  integrationName: String!
+  integrationName: IntegrationType!
+}
+
+enum IntegrationType {
+  GITHUB
+  POSTHOG
+  RAILWAYAPP
 }

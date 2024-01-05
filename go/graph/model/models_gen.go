@@ -2,9 +2,13 @@
 
 package model
 
+import (
+	"quickscopedev/database"
+)
+
 type NewIntegration struct {
-	TeamID          int64  `json:"teamId"`
-	IntegrationName string `json:"integrationName"`
+	TeamID          int64                    `json:"teamId"`
+	IntegrationName database.IntegrationType `json:"integrationName"`
 }
 
 type NewMonitor struct {

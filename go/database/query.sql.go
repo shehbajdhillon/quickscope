@@ -150,6 +150,122 @@ func (q *Queries) DeleteIntegrationByGitHubInstallationId(ctx context.Context, g
 	return i, err
 }
 
+const getIntegrationByTeamIdIntegrationId = `-- name: GetIntegrationByTeamIdIntegrationId :one
+SELECT id, team_id, integration_name, integration_data, github_installation_id FROM integration WHERE team_id = $1 AND id = $2
+`
+
+type GetIntegrationByTeamIdIntegrationIdParams struct {
+	TeamID sql.NullInt64
+	ID     int64
+}
+
+func (q *Queries) GetIntegrationByTeamIdIntegrationId(ctx context.Context, arg GetIntegrationByTeamIdIntegrationIdParams) (Integration, error) {
+	row := q.db.QueryRowContext(ctx, getIntegrationByTeamIdIntegrationId, arg.TeamID, arg.ID)
+	var i Integration
+	err := row.Scan(
+		&i.ID,
+		&i.TeamID,
+		&i.IntegrationName,
+		&i.IntegrationData,
+		&i.GithubInstallationID,
+	)
+	return i, err
+}
+
+const getIntegrationByTeamIdIntegrationIdIntegrationName = `-- name: GetIntegrationByTeamIdIntegrationIdIntegrationName :one
+SELECT id, team_id, integration_name, integration_data, github_installation_id FROM integration WHERE team_id = $1 AND id = $2 AND integration_name = $3
+`
+
+type GetIntegrationByTeamIdIntegrationIdIntegrationNameParams struct {
+	TeamID          sql.NullInt64
+	ID              int64
+	IntegrationName IntegrationType
+}
+
+func (q *Queries) GetIntegrationByTeamIdIntegrationIdIntegrationName(ctx context.Context, arg GetIntegrationByTeamIdIntegrationIdIntegrationNameParams) (Integration, error) {
+	row := q.db.QueryRowContext(ctx, getIntegrationByTeamIdIntegrationIdIntegrationName, arg.TeamID, arg.ID, arg.IntegrationName)
+	var i Integration
+	err := row.Scan(
+		&i.ID,
+		&i.TeamID,
+		&i.IntegrationName,
+		&i.IntegrationData,
+		&i.GithubInstallationID,
+	)
+	return i, err
+}
+
+const getIntegrationsByTeamId = `-- name: GetIntegrationsByTeamId :many
+SELECT id, team_id, integration_name, integration_data, github_installation_id FROM integration WHERE team_id = $1
+`
+
+func (q *Queries) GetIntegrationsByTeamId(ctx context.Context, teamID sql.NullInt64) ([]Integration, error) {
+	rows, err := q.db.QueryContext(ctx, getIntegrationsByTeamId, teamID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Integration
+	for rows.Next() {
+		var i Integration
+		if err := rows.Scan(
+			&i.ID,
+			&i.TeamID,
+			&i.IntegrationName,
+			&i.IntegrationData,
+			&i.GithubInstallationID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getIntegrationsByTeamIdIntegrationName = `-- name: GetIntegrationsByTeamIdIntegrationName :many
+SELECT id, team_id, integration_name, integration_data, github_installation_id FROM integration WHERE team_id = $1 AND integration_name = $2
+`
+
+type GetIntegrationsByTeamIdIntegrationNameParams struct {
+	TeamID          sql.NullInt64
+	IntegrationName IntegrationType
+}
+
+func (q *Queries) GetIntegrationsByTeamIdIntegrationName(ctx context.Context, arg GetIntegrationsByTeamIdIntegrationNameParams) ([]Integration, error) {
+	rows, err := q.db.QueryContext(ctx, getIntegrationsByTeamIdIntegrationName, arg.TeamID, arg.IntegrationName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Integration
+	for rows.Next() {
+		var i Integration
+		if err := rows.Scan(
+			&i.ID,
+			&i.TeamID,
+			&i.IntegrationName,
+			&i.IntegrationData,
+			&i.GithubInstallationID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getMonitorByTeamIdAndMonitorSlug = `-- name: GetMonitorByTeamIdAndMonitorSlug :one
 SELECT id, team_id, monitor_slug, monitor_name, created FROM monitor WHERE team_id = $1 and monitor_slug = $2 LIMIT 1
 `
