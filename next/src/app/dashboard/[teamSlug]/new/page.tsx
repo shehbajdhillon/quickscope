@@ -10,7 +10,8 @@ import {
   ArrowRightIcon,
   CheckIcon,
   ChevronsUpDownIcon,
-  ExternalLinkIcon
+  ExternalLinkIcon,
+  TrashIcon
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -19,13 +20,14 @@ import * as Select from '@/components/ui/select'
 import { MenuSeparator } from "@ark-ui/react";
 import { Link } from "@/components/ui/link";
 
-import { validatePostHogAPIKey, validateRailwayAPIKey } from "./actions";
+import { listRepositories, validatePostHogAPIKey, validateRailwayAPIKey } from "./actions";
 import { openPopUpWindow } from "@/utils";
 import { Badge } from "@/components/ui/badge";
 import { Code } from "@/components/ui/code";
 import { gql, useQuery } from "@apollo/client";
 import { GetLinkedGitHubAccountsQuery } from "@/__generatedGqlTypes__/graphql";
 import { useParams } from "next/navigation";
+import { RestEndpointMethodTypes } from "@octokit/rest";
 
 const GET_LINKED_GITHUB_ACCOUNTS = gql`
   query GetLinkedGitHubAccounts($teamSlug: String!) {
@@ -79,10 +81,16 @@ const NewPage = () => {
             ))}
           </HStack>
 
-            <Stack maxWidth={{ md: "560px" }} w="full">
-              { currentStep == 0 && <GithubImportBox teamSlug={params.teamSlug as string} /> }
-              { currentStep == 1 && <ObservabilityImportBox /> }
-              { currentStep == 2 && <MonitorReviewBox /> }
+            <Stack maxWidth={{ md: "560px" }} w="full" display={currentStep !== 0 ? "none" : "block"}>
+              <GithubImportBox teamSlug={params.teamSlug as string} />
+            </Stack>
+
+            <Stack maxWidth={{ md: "560px" }} w="full" display={currentStep !== 1 ? "none" : "block"}>
+              <ObservabilityImportBox />
+            </Stack>
+
+            <Stack maxWidth={{ md: "560px" }} w="full" display={currentStep !== 2 ? "none" : "block"}>
+              <MonitorReviewBox />
             </Stack>
 
             <HStack pt="15px" w="full" maxWidth={{ md: "560px" }}>
@@ -346,6 +354,8 @@ const RailwayAppImportBox: React.FC<ImportBoxProps> = ({ pushKey }) => {
 };
 
 
+type REPOSITORIES = RestEndpointMethodTypes["apps"]["listReposAccessibleToInstallation"]["response"]["data"]["repositories"];
+
 const GithubImportBox = (props: { teamSlug: string }) => {
 
   const openGithubPopUp = () => {
@@ -360,7 +370,7 @@ const GithubImportBox = (props: { teamSlug: string }) => {
     }, 1000);
   };
 
-  const { data, loading, error, refetch }
+  const { data, refetch }
     = useQuery<GetLinkedGitHubAccountsQuery>(
     GET_LINKED_GITHUB_ACCOUNTS, { variables: { teamSlug: props.teamSlug } });
 
@@ -368,9 +378,29 @@ const GithubImportBox = (props: { teamSlug: string }) => {
 
   const items = accounts?.map(acc => { return { label: acc.accountName, value: acc.accountName, installationId: acc.githubInstallationId } } );
 
-  const [gitAccount, setGitAccount] = useState(items?.[0].value);
+  const [repos, setRepos] = useState<REPOSITORIES>([]);
+  const [selectedRepos, setSelectedRepos] = useState<REPOSITORIES>([]);
 
-  useEffect(() => { console.log({ data, loading, error }) }, [loading, data, error]);
+  const fetchRepos = async (gitAccount: string) => {
+    const id = items?.find(item => item.value === gitAccount)?.installationId;
+    const res = await listRepositories(id);
+    setRepos(res.data.repositories);
+  };
+
+  useEffect(() => {
+    if (accounts === undefined) return;
+    fetchRepos(accounts[0].accountName);
+  }, [accounts]);
+
+  const pushRepo = (repo: REPOSITORIES) => {
+    setSelectedRepos([ ...selectedRepos, ...repo ]);
+  }
+
+  const popRepo = (idx: number) => {
+    const newRepos = [ ...selectedRepos ];
+    newRepos.splice(idx, 1);
+    setSelectedRepos(newRepos);
+  };
 
   return (
     <Card w="full">
@@ -387,7 +417,7 @@ const GithubImportBox = (props: { teamSlug: string }) => {
             positioning={{ sameWidth: true }}
             items={items}
             defaultValue={[items[0].value]}
-            onValueChange={(event) => setGitAccount(event.value[0])}
+            onValueChange={(event) => fetchRepos(event.value[0])}
             hidden={items.length == 0}
           >
             <Select.Control>
@@ -418,15 +448,34 @@ const GithubImportBox = (props: { teamSlug: string }) => {
         <Button w="max" onClick={openGithubPopUp}>
           {"+ Add New GitHub Account"}
         </Button>
-        <HStack>
-          PlanetCast
-          <Spacer />
-          <Button>
-           Import
-          </Button>
-        </HStack>
+        <Stack overflowY={"auto"} maxH={"300px"}>
+        {repos.map((repo, key) => {
+          return (
+            selectedRepos.find(r => r.id === repo.id) === undefined &&
+            <HStack key={key}>
+              {repo.name}
+              <Spacer />
+              <Button onClick={() => pushRepo([repo])}>
+               Import
+              </Button>
+            </HStack>
+          )
+        })}
+        </Stack>
         <MenuSeparator />
-        <text>All connected repositories will show here. (None connected yet)</text>
+        {selectedRepos.length <= 0 &&
+          <text>All connected repositories will show here. (None connected yet)</text> }
+        <Stack overflowY={"auto"} maxH={"150px"}>
+        {selectedRepos.map((repo, key) => (
+          <HStack key={key}>
+            {repo.name}
+            <Spacer />
+            <Button onClick={() => popRepo(key)}>
+              <TrashIcon />
+            </Button>
+          </HStack>
+        ))}
+        </Stack>
       </CardBody>
       <CardFooter>
       </CardFooter>
@@ -435,4 +484,3 @@ const GithubImportBox = (props: { teamSlug: string }) => {
 };
 
 export default NewPage;
-

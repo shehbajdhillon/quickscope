@@ -2,6 +2,7 @@
 
 import { createAppAuth } from "@octokit/auth-app";
 import { Octokit } from "@octokit/rest";
+import crypto from "node:crypto";
 
 export const validatePostHogAPIKey = async (apiKey: string) => {
   const url = 'https://app.posthog.com/api/organizations/@current';
@@ -50,11 +51,22 @@ export const validateRailwayAPIKey = async (apiKey: string) => {
 };
 
 
-export const generateInstallationAccessToken = async (installationId: number) => {
+const generateInstallationAccessToken = async (installationId: number) => {
+
+  const keyObject = crypto.createPrivateKey({
+    key: process.env.GITHUB_APP_PRIVATE_KEY!.split(String.raw`\n`).join('\n'),
+    format: "pem",
+    type: "pkcs1",
+  });
+
+  const pkcs8PrivateKey = keyObject.export({
+    format: "pem",
+    type: "pkcs8",
+  }).toString();
 
   const auth = createAppAuth({
     appId: process.env.GITHUB_APP_ID || "",
-    privateKey: process.env.GITHUB_APP_PRIVATE_KEY || "",
+    privateKey: pkcs8PrivateKey,
     clientId: process.env.GITHUB_APP_CLIENT_ID || "",
     clientSecret: process.env.GITHUB_APP_CLIENT_SECRET || "",
   });

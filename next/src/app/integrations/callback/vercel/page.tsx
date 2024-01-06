@@ -29,7 +29,6 @@ const VercelCallbackPage = () => {
       const result = await exchangeCodeForAccessToken(code);
       setScope(result.team_id ? "team" : "personal account");
       setRes(result);
-      console.log({ result });
     });
   }, [code]);
 
