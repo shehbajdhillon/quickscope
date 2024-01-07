@@ -14,7 +14,7 @@ import {
   TrashIcon
 } from "lucide-react";
 
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import * as Select from '@/components/ui/select'
 import { MenuSeparator } from "@ark-ui/react";
@@ -28,6 +28,10 @@ import { gql, useQuery } from "@apollo/client";
 import { GetLinkedGitHubAccountsQuery } from "@/__generatedGqlTypes__/graphql";
 import { useParams } from "next/navigation";
 import { RestEndpointMethodTypes } from "@octokit/rest";
+
+type REPOSITORIES = RestEndpointMethodTypes["apps"]["listReposAccessibleToInstallation"]["response"]["data"]["repositories"];
+
+type ITEM = { label: string; value: string; };
 
 const GET_LINKED_GITHUB_ACCOUNTS = gql`
   query GetLinkedGitHubAccounts($teamSlug: String!) {
@@ -47,6 +51,32 @@ const NewPage = () => {
   const [currentStep, setCurrentStep] = useState(0);
 
   const params = useParams();
+
+  const [selectedRepos, setSelectedRepos] = useState<REPOSITORIES>([]);
+
+  const pushRepo = (repo: REPOSITORIES) => {
+    setSelectedRepos([ ...selectedRepos, ...repo ]);
+  }
+
+  const popRepo = (idx: number) => {
+    const newRepos = [ ...selectedRepos ];
+    newRepos.splice(idx, 1);
+    setSelectedRepos(newRepos);
+  };
+
+  const [selectedSources, setSelectedSources] = useState<ITEM[]>([]);
+
+  const pushSource = (source: ITEM) => {
+    setSelectedSources([ ...selectedSources, source ]);
+  };
+
+  const popSource = (idx: number) => {
+    const newSources = [ ...selectedSources ];
+    newSources.splice(idx, 1);
+    setSelectedSources(newSources);
+  };
+
+  const [monitorName, setMonitorName] = useState("");
 
   return (
     <Stack gap={"20px"} justifyContent={"center"}>
@@ -82,15 +112,29 @@ const NewPage = () => {
           </HStack>
 
             <Stack maxWidth={{ md: "560px" }} w="full" display={currentStep !== 0 ? "none" : "block"}>
-              <GithubImportBox teamSlug={params.teamSlug as string} />
+              <GithubImportBox
+                teamSlug={params.teamSlug as string}
+                pushRepo={pushRepo}
+                popRepo={popRepo}
+                selectedRepos={selectedRepos}
+              />
             </Stack>
 
             <Stack maxWidth={{ md: "560px" }} w="full" display={currentStep !== 1 ? "none" : "block"}>
-              <ObservabilityImportBox />
+              <ObservabilityImportBox
+                pushSource={pushSource}
+                popSource={popSource}
+                selectedSources={selectedSources}
+              />
             </Stack>
 
             <Stack maxWidth={{ md: "560px" }} w="full" display={currentStep !== 2 ? "none" : "block"}>
-              <MonitorReviewBox />
+              <MonitorReviewBox
+                selectedRepos={selectedRepos}
+                selectedSources={selectedSources}
+                monitorName={monitorName}
+                setMonitorName={setMonitorName}
+              />
             </Stack>
 
             <HStack pt="15px" w="full" maxWidth={{ md: "560px" }}>
@@ -99,7 +143,14 @@ const NewPage = () => {
                 <ArrowLeftIcon />
                 Back
               </Button>
-              <Button onClick={() => setCurrentStep(curr => Math.min(curr + 1, 2))}>
+              <Button
+                onClick={() => setCurrentStep(curr => Math.min(curr + 1, 2))}
+                disabled={
+                  (currentStep == 0 && selectedRepos.length == 0) ||
+                  (currentStep == 1 && selectedSources.length == 0) ||
+                  (currentStep == 2 && monitorName.length <= 3)
+                }
+              >
                 Continue
                 <ArrowRightIcon />
               </Button>
@@ -111,7 +162,17 @@ const NewPage = () => {
   );
 };
 
-const MonitorReviewBox = () => {
+interface MonitorReviewBoxProps {
+  selectedRepos: REPOSITORIES;
+  selectedSources: ITEM[];
+  monitorName: string;
+  setMonitorName: Dispatch<SetStateAction<string>>;
+};
+
+const MonitorReviewBox: React.FC<MonitorReviewBoxProps> = (props) => {
+
+  const { monitorName, setMonitorName, selectedRepos, selectedSources } = props;
+
   return (
     <Card w="full">
       <CardHeader>
@@ -122,19 +183,25 @@ const MonitorReviewBox = () => {
       </CardHeader>
       <CardBody gap={"20px"}>
         <HStack>
-          <Input placeholder="Monitor Name" />
+          <Input
+            placeholder="Monitor Name"
+            value={monitorName}
+            onChange={(e) => setMonitorName(e.target.value)}
+          />
         </HStack>
 
         <Stack>
           <text className={css({ fontWeight: "medium" })}>
-            Repository Connected
+            {selectedRepos.length <= 1 ? 'Repository Connected' : 'Repositories Connected'}
           </text>
           <MenuSeparator />
-          <HStack>
-            <text>PlanetCast</text>
-            <Spacer />
-            <Code>shehbajdhillon</Code>
-          </HStack>
+          {selectedRepos.map((repo, idx) => (
+            <HStack key={idx}>
+              <text>{repo.name}</text>
+              <Spacer />
+              <Code>{repo.owner.login}</Code>
+            </HStack>
+          ))}
         </Stack>
 
         <Stack>
@@ -142,43 +209,41 @@ const MonitorReviewBox = () => {
             Observability Sources Connected
           </text>
           <MenuSeparator />
-          <HStack>
-            <text>PostHog</text>
-            <Spacer />
-            <Code>****HGF2</Code>
-          </HStack>
-          <HStack>
-            <text>Vercel</text>
-            <Spacer />
-            <Code>syncsoftware</Code>
-          </HStack>
-          <HStack>
-            <text>Railway</text>
-            <Spacer />
-            <Code>****FWEF3</Code>
-          </HStack>
+          {selectedSources.map((src, key) => (
+            <HStack key={key}>
+              <text>{src.label}</text>
+              <Spacer />
+              <Code>****{src.value.slice(-4)}</Code>
+            </HStack>
+          ))}
         </Stack>
       </CardBody>
     </Card>
   );
 };
 
-const ObservabilityImportBox = () => {
+
+interface ObservabilityImportBoxProps {
+  pushSource: (source: ITEM) => any;
+  popSource: (idx: number) => any;
+  selectedSources: Record<string, any>[];
+};
+
+const ObservabilityImportBox: React.FC<ObservabilityImportBoxProps> = (props) => {
+
+  const { selectedSources, pushSource, popSource } = props;
+
   const items = [
-    { label: 'Vercel (Logs)', value: 'Vercel' },
-    { label: 'PostHog (Logs, User Sessions)', value: 'PostHog' },
-    { label: 'Railway.app (Logs)', value: 'Railway.app'},
-    { label: 'Rollbar (Coming Soon)', value: 'Rollbar', disabled: true, },
-    { label: 'Heroku (Coming Soon)', value: 'Heroku', disabled: true, },
-    { label: 'AWS EC2 (Coming Soon)', value: 'AWS EC2', disabled: true, },
-    { label: 'Fly.io (Coming Soon)', value: 'Fly.io', disabled: true, },
+    { label: 'Vercel (Logs)', value: 'VERCEL' },
+    { label: 'PostHog (Logs, User Sessions)', value: 'POSTHOG' },
+    { label: 'Railway.app (Logs)', value: 'RAILWAYAPP'},
+    { label: 'Rollbar (Coming Soon)', value: 'ROLLBAR', disabled: true, },
+    { label: 'Heroku (Coming Soon)', value: 'HEROKU', disabled: true, },
+    { label: 'AWS EC2 (Coming Soon)', value: 'AWSEC2', disabled: true, },
+    { label: 'Fly.io (Coming Soon)', value: 'FLYIO', disabled: true, },
   ]
 
   const [provider, setProvider] = useState(items[0].value);
-
-  const pushKey = (key: string) => {
-    return true;
-  };
 
   return (
     <Card w="full">
@@ -222,13 +287,25 @@ const ObservabilityImportBox = () => {
         </HStack>
 
         <Stack>
-          { provider == "Vercel" && <VercelImportBox /> }
-          { provider == "PostHog" && <PostHogImportBox pushKey={pushKey} /> }
-          { provider == "Railway.app" && <RailwayAppImportBox pushKey={pushKey} /> }
+          { provider == "VERCEL" && <VercelImportBox /> }
+          { provider == "POSTHOG" && <PostHogImportBox pushKey={pushSource} /> }
+          { provider == "RAILWAYAPP" && <RailwayAppImportBox pushKey={pushSource} /> }
         </Stack>
 
         <MenuSeparator />
-        <text>All connected services will show here. (None connected yet)</text>
+        {selectedSources.length <= 0 &&  <text>All connected services will show here. (None connected yet)</text>}
+        <Stack overflowY={"auto"} maxH={"250px"}>
+        {selectedSources.map((src, key) => (
+          <HStack key={key}>
+            <text>{src.label}</text>
+            <Spacer />
+            <Code>****{src.value.slice(-4)}</Code>
+            <Button onClick={() => popSource(key)}>
+              <TrashIcon />
+            </Button>
+          </HStack>
+        ))}
+        </Stack>
       </CardBody>
     </Card>
   );
@@ -236,7 +313,7 @@ const ObservabilityImportBox = () => {
 
 
 interface ImportBoxProps {
-  pushKey: (key: string) => boolean;
+  pushKey: (source: ITEM) => boolean;
 };
 
 
@@ -291,7 +368,7 @@ const PostHogImportBox: React.FC<ImportBoxProps> = ({ pushKey }) => {
           value={posthogKey}
           onChange={(e) => setPosthogKey(e.target.value)}
         />
-        <Button disabled={!confirmed} onClick={() => pushKey(posthogKey)}>
+        <Button disabled={!confirmed} onClick={() => pushKey({ label: 'PostHog', value: posthogKey})}>
           Add
         </Button>
       </HStack>
@@ -340,7 +417,7 @@ const RailwayAppImportBox: React.FC<ImportBoxProps> = ({ pushKey }) => {
           value={railwayKey}
           onChange={(e) => setRailwayKey(e.target.value)}
         />
-        <Button disabled={!confirmed} onClick={() => pushKey(railwayKey)}>
+        <Button disabled={!confirmed} onClick={() => pushKey({ label: 'Railway.app', value: railwayKey})}>
           Add
         </Button>
       </HStack>
@@ -354,9 +431,18 @@ const RailwayAppImportBox: React.FC<ImportBoxProps> = ({ pushKey }) => {
 };
 
 
-type REPOSITORIES = RestEndpointMethodTypes["apps"]["listReposAccessibleToInstallation"]["response"]["data"]["repositories"];
 
-const GithubImportBox = (props: { teamSlug: string }) => {
+interface GithubImportBoxProps {
+  teamSlug: string;
+  selectedRepos: REPOSITORIES;
+  pushRepo: (repo: REPOSITORIES) => void;
+  popRepo: (idx: number) => void;
+};
+
+
+const GithubImportBox: React.FC<GithubImportBoxProps> = (props) => {
+
+  const { teamSlug, selectedRepos, pushRepo, popRepo } = props;
 
   const openGithubPopUp = () => {
     const githubAppInstallationUrl =
@@ -379,7 +465,6 @@ const GithubImportBox = (props: { teamSlug: string }) => {
   const items = accounts?.map(acc => { return { label: acc.accountName, value: acc.accountName, installationId: acc.githubInstallationId } } );
 
   const [repos, setRepos] = useState<REPOSITORIES>([]);
-  const [selectedRepos, setSelectedRepos] = useState<REPOSITORIES>([]);
 
   const fetchRepos = async (gitAccount: string) => {
     const id = items?.find(item => item.value === gitAccount)?.installationId;
@@ -392,15 +477,6 @@ const GithubImportBox = (props: { teamSlug: string }) => {
     fetchRepos(accounts[0].accountName);
   }, [accounts]);
 
-  const pushRepo = (repo: REPOSITORIES) => {
-    setSelectedRepos([ ...selectedRepos, ...repo ]);
-  }
-
-  const popRepo = (idx: number) => {
-    const newRepos = [ ...selectedRepos ];
-    newRepos.splice(idx, 1);
-    setSelectedRepos(newRepos);
-  };
 
   return (
     <Card w="full">
@@ -470,6 +546,7 @@ const GithubImportBox = (props: { teamSlug: string }) => {
           <HStack key={key}>
             {repo.name}
             <Spacer />
+            <Code>{repo.owner.login}</Code>
             <Button onClick={() => popRepo(key)}>
               <TrashIcon />
             </Button>
