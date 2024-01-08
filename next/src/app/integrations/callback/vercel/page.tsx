@@ -1,36 +1,44 @@
-"use client";
-
-import { Button } from "@/components/ui/button";
 import { css } from "@/styled-system/css";
-import { Stack, HStack, VStack, Spacer } from "@/styled-system/jsx";
-import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
-import { Card, CardBody, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSearchParams } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
-import { VercelToken, exchangeCodeForAccessToken } from "./actions";
-import Link from "next/link";
+import { Stack, VStack } from "@/styled-system/jsx";
+import { exchangeCodeForAccessToken, getVercelTeamName } from "./actions";
+import { ConfirmationBox } from "./components";
+import { GetTeamSlugsQuery, VercelToken } from "@/__generatedGqlTypes__/graphql";
+import { auth } from "@clerk/nextjs";
+import { GetApolloClient } from "@/apollo-client";
+import { GET_TEAM_SLUGS } from "@/app/dashboard/gql";
 
-const VercelCallbackPage = () => {
+export const dynamic = "force-dynamic";
 
-  const [scope, setScope] = useState<"team" | "personal account" | undefined>();
+type Props = {
+  searchParams?: {
+    code?: string;
+    next?: string;
+  };
+};
 
-  const searchParams = useSearchParams();
-  const code = searchParams.get("code");
-  const next = searchParams.get("next");
+export default async function VercelCallbackPage(params: Props) {
 
-  const [_, exchange] = useTransition();
+  const token = await exchangeCodeForAccessToken(params.searchParams?.code!);
+  const next = params.searchParams?.next;
+  const teamName = await getVercelTeamName(token);
 
-  const [res, setRes] = useState<VercelToken>();
+  const vercelToken: VercelToken = {
+    accessToken: token.access_token,
+    installationId: token.installation_id,
+    userId: token.user_id,
+    tokenType: token.token_type,
+    teamId: token.team_id || "",
+    accountName: teamName,
+  };
 
-  useEffect(() => {
-    if (!code) return;
-
-    exchange(async () => {
-      const result = await exchangeCodeForAccessToken(code);
-      setScope(result.team_id ? "team" : "personal account");
-      setRes(result);
-    });
-  }, [code]);
+  const { getToken } = auth();
+  const apolloClient = GetApolloClient(true, getToken);
+  const { data } = await apolloClient.query<GetTeamSlugsQuery>({
+    query: GET_TEAM_SLUGS,
+    context: { fetchOptions: { next: { revalidate: 5 } } }
+  });
+  const teams = data.teams;
+  const slug = teams[0].teamSlug;
 
   return (
     <Stack gap={"20px"} justifyContent={"center"}>
@@ -40,7 +48,7 @@ const VercelCallbackPage = () => {
           Connect your Vercel acccount to QuickScope.
         </p>
       </Stack>
-      <VStack hidden={res === undefined}>
+      <VStack hidden={token === undefined}>
         <Stack direction={"column"}>
           <Stack
             direction={{ base: "column", md: "row" }}
@@ -48,58 +56,18 @@ const VercelCallbackPage = () => {
             w="full"
           >
             <Stack maxWidth={{ md: "672px" }} w="full">
-              { res && <ConfirmationBox token={res} /> }
+              { token &&
+                <ConfirmationBox
+                  vercelToken={vercelToken}
+                  next={next!}
+                  teamName={teamName}
+                  teamSlug={slug}
+                />
+              }
             </Stack>
           </Stack>
-          <HStack pt="15px">
-            <Spacer />
-            <Link href="/dashboard">
-              <Button>
-                <ArrowLeftIcon />
-                Cancel
-              </Button>
-            </Link>
-            <Link href={next!}>
-              <Button>
-                Continue
-                <ArrowRightIcon />
-              </Button>
-            </Link>
-          </HStack>
         </Stack>
       </VStack>
     </Stack>
   );
 };
-
-const ConfirmationBox = ({ token }: { token: VercelToken }) => {
-  return (
-    <Card w="full">
-      <CardHeader>
-        <CardTitle>Connect Vercel Account</CardTitle>
-        <CardDescription>
-          This will allow QuickScope to access resources on your Vercel account.
-        </CardDescription>
-      </CardHeader>
-      <CardBody gap={"20px"}>
-        <HStack>
-          <text className={css({ fontSize: "20px" })}>
-            You are about to connect<br /><br />
-            <span className={css({ fontWeight: "medium" })}>
-              Vercel team<br />{"Shehbaj Dhillon's Personal Workspace"}<br /><br />
-            </span>
-            with<br /><br />
-            <span className={css({ fontWeight: "medium" })}>
-              QuickScope team<br />{"Shehbaj Dhillon's Personal Workspace"}<br /><br />
-            </span>
-            Your QuickScope team will have access to all authorized resources of this Vercel team.
-          </text>
-        </HStack>
-      </CardBody>
-      <CardFooter>
-      </CardFooter>
-    </Card>
-  );
-};
-
-export default VercelCallbackPage;

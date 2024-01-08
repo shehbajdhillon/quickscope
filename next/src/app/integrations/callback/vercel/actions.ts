@@ -29,3 +29,19 @@ export async function exchangeCodeForAccessToken(code: string) {
 
   return body as VercelToken;
 };
+
+export async function getVercelTeamName(vercelToken: VercelToken) {
+
+  const token = vercelToken.access_token;
+
+  const result = await fetch("https://api.vercel.com/v2/user", {
+    headers: {
+      "Authorization": `Bearer ${token}`
+    },
+    method: "GET",
+  });
+
+  const body = await result.json();
+
+  return body["user"]["username"];
+};

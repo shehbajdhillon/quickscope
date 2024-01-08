@@ -23,13 +23,16 @@ export type Integration = {
   __typename?: 'Integration';
   accountName: Scalars['String']['output'];
   githubInstallationId: Scalars['Int64']['output'];
+  id: Scalars['Int64']['output'];
   integrationName: IntegrationType;
+  vercelInstallationId: Scalars['String']['output'];
 };
 
 export enum IntegrationType {
   Github = 'GITHUB',
   Posthog = 'POSTHOG',
-  Railwayapp = 'RAILWAYAPP'
+  Railwayapp = 'RAILWAYAPP',
+  Vercel = 'VERCEL'
 }
 
 export type Monitor = {
@@ -44,6 +47,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   addGithubInstallationId: Integration;
   addIntegration: Integration;
+  addVercelIntegration: Integration;
   createMonitor: Monitor;
 };
 
@@ -56,6 +60,12 @@ export type MutationAddGithubInstallationIdArgs = {
 
 export type MutationAddIntegrationArgs = {
   input: NewIntegration;
+};
+
+
+export type MutationAddVercelIntegrationArgs = {
+  teamSlug: Scalars['String']['input'];
+  vercelToken: VercelToken;
 };
 
 
@@ -104,12 +114,28 @@ export type TeamMonitorsArgs = {
   monitorSlug?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type VercelToken = {
+  accessToken: Scalars['String']['input'];
+  accountName: Scalars['String']['input'];
+  installationId: Scalars['String']['input'];
+  teamId: Scalars['String']['input'];
+  tokenType: Scalars['String']['input'];
+  userId: Scalars['String']['input'];
+};
+
 export type GetLinkedGitHubAccountsQueryVariables = Exact<{
   teamSlug: Scalars['String']['input'];
 }>;
 
 
-export type GetLinkedGitHubAccountsQuery = { __typename?: 'Query', teams: Array<{ __typename?: 'Team', integrations: Array<{ __typename?: 'Integration', accountName: string, integrationName: IntegrationType, githubInstallationId: any }> }> };
+export type GetLinkedGitHubAccountsQuery = { __typename?: 'Query', teams: Array<{ __typename?: 'Team', integrations: Array<{ __typename?: 'Integration', id: any, accountName: string, integrationName: IntegrationType, githubInstallationId: any }> }> };
+
+export type GetLinkedVercelAccountsQueryVariables = Exact<{
+  teamSlug: Scalars['String']['input'];
+}>;
+
+
+export type GetLinkedVercelAccountsQuery = { __typename?: 'Query', teams: Array<{ __typename?: 'Team', integrations: Array<{ __typename?: 'Integration', id: any, accountName: string, integrationName: IntegrationType, vercelInstallationId: string }> }> };
 
 export type GetTeamSlugsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -124,7 +150,17 @@ export type LinkGitHubAccountMutationVariables = Exact<{
 
 export type LinkGitHubAccountMutation = { __typename?: 'Mutation', addGithubInstallationId: { __typename?: 'Integration', accountName: string } };
 
+export type LinkVercelAccountMutationVariables = Exact<{
+  teamSlug: Scalars['String']['input'];
+  vercelToken: VercelToken;
+}>;
 
-export const GetLinkedGitHubAccountsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetLinkedGitHubAccounts"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"teamSlug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teams"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"teamSlug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"teamSlug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"integrations"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"integrationName"},"value":{"kind":"EnumValue","value":"GITHUB"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accountName"}},{"kind":"Field","name":{"kind":"Name","value":"integrationName"}},{"kind":"Field","name":{"kind":"Name","value":"githubInstallationId"}}]}}]}}]}}]} as unknown as DocumentNode<GetLinkedGitHubAccountsQuery, GetLinkedGitHubAccountsQueryVariables>;
+
+export type LinkVercelAccountMutation = { __typename?: 'Mutation', addVercelIntegration: { __typename?: 'Integration', integrationName: IntegrationType } };
+
+
+export const GetLinkedGitHubAccountsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetLinkedGitHubAccounts"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"teamSlug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teams"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"teamSlug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"teamSlug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"integrations"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"integrationName"},"value":{"kind":"EnumValue","value":"GITHUB"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"accountName"}},{"kind":"Field","name":{"kind":"Name","value":"integrationName"}},{"kind":"Field","name":{"kind":"Name","value":"githubInstallationId"}}]}}]}}]}}]} as unknown as DocumentNode<GetLinkedGitHubAccountsQuery, GetLinkedGitHubAccountsQueryVariables>;
+export const GetLinkedVercelAccountsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetLinkedVercelAccounts"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"teamSlug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teams"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"teamSlug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"teamSlug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"integrations"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"integrationName"},"value":{"kind":"EnumValue","value":"VERCEL"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"accountName"}},{"kind":"Field","name":{"kind":"Name","value":"integrationName"}},{"kind":"Field","name":{"kind":"Name","value":"vercelInstallationId"}}]}}]}}]}}]} as unknown as DocumentNode<GetLinkedVercelAccountsQuery, GetLinkedVercelAccountsQueryVariables>;
 export const GetTeamSlugsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetTeamSlugs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teams"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teamSlug"}}]}}]}}]} as unknown as DocumentNode<GetTeamSlugsQuery, GetTeamSlugsQueryVariables>;
 export const LinkGitHubAccountDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"LinkGitHubAccount"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"teamSlug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"installationId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int64"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"addGithubInstallationId"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"teamSlug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"teamSlug"}}},{"kind":"Argument","name":{"kind":"Name","value":"installationId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"installationId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accountName"}}]}}]}}]} as unknown as DocumentNode<LinkGitHubAccountMutation, LinkGitHubAccountMutationVariables>;
+export const LinkVercelAccountDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"LinkVercelAccount"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"teamSlug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"vercelToken"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"VercelToken"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"addVercelIntegration"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"teamSlug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"teamSlug"}}},{"kind":"Argument","name":{"kind":"Name","value":"vercelToken"},"value":{"kind":"Variable","name":{"kind":"Name","value":"vercelToken"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"integrationName"}}]}}]}}]} as unknown as DocumentNode<LinkVercelAccountMutation, LinkVercelAccountMutationVariables>;

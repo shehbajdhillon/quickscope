@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardBody, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardBody, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { css } from "@/styled-system/css";
 import { Stack, HStack, Spacer, VStack } from "@/styled-system/jsx";
@@ -25,21 +25,35 @@ import { openPopUpWindow } from "@/utils";
 import { Badge } from "@/components/ui/badge";
 import { Code } from "@/components/ui/code";
 import { gql, useQuery } from "@apollo/client";
-import { GetLinkedGitHubAccountsQuery } from "@/__generatedGqlTypes__/graphql";
+import { GetLinkedGitHubAccountsQuery, GetLinkedVercelAccountsQuery } from "@/__generatedGqlTypes__/graphql";
 import { useParams } from "next/navigation";
 import { RestEndpointMethodTypes } from "@octokit/rest";
 
 type REPOSITORIES = RestEndpointMethodTypes["apps"]["listReposAccessibleToInstallation"]["response"]["data"]["repositories"];
 
-type ITEM = { label: string; value: string; };
+type ITEM = { label: string; value: any; integrationId?: number; };
 
 const GET_LINKED_GITHUB_ACCOUNTS = gql`
   query GetLinkedGitHubAccounts($teamSlug: String!) {
     teams(teamSlug: $teamSlug) {
       integrations(integrationName: GITHUB) {
+        id
         accountName
         integrationName
         githubInstallationId
+      }
+    }
+  }
+`;
+
+const GET_LINKED_VERCEL_ACCOUNTS = gql`
+  query GetLinkedVercelAccounts($teamSlug: String!) {
+    teams(teamSlug: $teamSlug) {
+      integrations(integrationName: VERCEL) {
+        id
+        accountName
+        integrationName
+        vercelInstallationId
       }
     }
   }
@@ -122,6 +136,7 @@ const NewPage = () => {
 
             <Stack maxWidth={{ md: "560px" }} w="full" display={currentStep !== 1 ? "none" : "block"}>
               <ObservabilityImportBox
+                teamSlug={params.teamSlug as string}
                 pushSource={pushSource}
                 popSource={popSource}
                 selectedSources={selectedSources}
@@ -213,7 +228,11 @@ const MonitorReviewBox: React.FC<MonitorReviewBoxProps> = (props) => {
             <HStack key={key}>
               <text>{src.label}</text>
               <Spacer />
-              <Code>****{src.value.slice(-4)}</Code>
+              { src.label === "Vercel" ?
+                <Code>{src.value}</Code>
+                :
+                <Code>****{src.value.slice(-4)}</Code>
+              }
             </HStack>
           ))}
         </Stack>
@@ -227,11 +246,12 @@ interface ObservabilityImportBoxProps {
   pushSource: (source: ITEM) => any;
   popSource: (idx: number) => any;
   selectedSources: Record<string, any>[];
+  teamSlug: string;
 };
 
 const ObservabilityImportBox: React.FC<ObservabilityImportBoxProps> = (props) => {
 
-  const { selectedSources, pushSource, popSource } = props;
+  const { teamSlug, selectedSources, pushSource, popSource } = props;
 
   const items = [
     { label: 'Vercel (Logs)', value: 'VERCEL' },
@@ -287,9 +307,9 @@ const ObservabilityImportBox: React.FC<ObservabilityImportBoxProps> = (props) =>
         </HStack>
 
         <Stack>
-          { provider == "VERCEL" && <VercelImportBox /> }
-          { provider == "POSTHOG" && <PostHogImportBox pushKey={pushSource} /> }
-          { provider == "RAILWAYAPP" && <RailwayAppImportBox pushKey={pushSource} /> }
+          { provider == "VERCEL" && <VercelImportBox teamSlug={teamSlug} pushKey={pushSource} /> }
+          { provider == "POSTHOG" && <PostHogImportBox teamSlug={teamSlug} pushKey={pushSource} /> }
+          { provider == "RAILWAYAPP" && <RailwayAppImportBox teamSlug={teamSlug} pushKey={pushSource} /> }
         </Stack>
 
         <MenuSeparator />
@@ -299,7 +319,11 @@ const ObservabilityImportBox: React.FC<ObservabilityImportBoxProps> = (props) =>
           <HStack key={key}>
             <text>{src.label}</text>
             <Spacer />
-            <Code>****{src.value.slice(-4)}</Code>
+            { src.label === "Vercel" ?
+              <Code>{src.value}</Code>
+              :
+              <Code>****{src.value.slice(-4)}</Code>
+            }
             <Button onClick={() => popSource(key)}>
               <TrashIcon />
             </Button>
@@ -314,15 +338,100 @@ const ObservabilityImportBox: React.FC<ObservabilityImportBoxProps> = (props) =>
 
 interface ImportBoxProps {
   pushKey: (source: ITEM) => boolean;
+  teamSlug: string;
 };
 
 
-const VercelImportBox = () => {
+const VercelImportBox: React.FC<ImportBoxProps> = (props) => {
+
+  const { pushKey, teamSlug } = props;
+
+  const { data, loading }
+    = useQuery<GetLinkedVercelAccountsQuery>(
+    GET_LINKED_VERCEL_ACCOUNTS, { variables: { teamSlug } });
+
+  const accounts = data?.teams[0].integrations;
+
+  const items = accounts?.map(acc => ({
+    integrationId: acc.id,
+    label: acc.accountName,
+    value: acc.accountName,
+    installationId: acc.vercelInstallationId,
+  }));
+
+  const openVercelPopUp = () => {
+    const githubAppInstallationUrl =
+      "https://vercel.com/integrations/quickscope";
+    const window = openPopUpWindow(githubAppInstallationUrl);
+    const checkChildWindow = setInterval(() => {
+      if (window?.closed) {
+        clearInterval(checkChildWindow);
+        alert("Window Closed");
+      }
+    }, 1000);
+  };
+
+  const [accInfo, setAccInfo] = useState<{
+    value: string;
+    integrationId: number;
+  }>();
+
+
+  useEffect(() => {
+    if (accounts === undefined || accounts.length === 0) return;
+    const acc = accounts[0];
+    setAccInfo({ value: acc.accountName, integrationId: acc.id });
+  }, [accounts]);
+
+
+  const updateEntry = (value: string) => {
+    const item = items!.find(item => item.value === value)!;
+    setAccInfo({ value: item.value, integrationId: item.integrationId });
+  };
+
   return (
     <Stack>
-      Connect Vercel
+      Connect Vercel Account
+      { items !== undefined && items.length > 0 &&
       <HStack>
-        <Button>Connect Vercel Account</Button>
+        <Select.Root
+          positioning={{ sameWidth: true }}
+          items={items}
+          defaultValue={[items[0].value]}
+          hidden={items.length == 0}
+          onValueChange={(e) => updateEntry(e.value[0])}
+        >
+          <Select.Control>
+            <Select.Trigger>
+              <Select.ValueText />
+              <ChevronsUpDownIcon />
+            </Select.Trigger>
+          </Select.Control>
+          <Select.Positioner>
+            <Select.Content>
+              <Select.ItemGroup id="gitprovider">
+                <Select.ItemGroupLabel htmlFor="gitprovider">Account</Select.ItemGroupLabel>
+                {items.map((item) => (
+                  <Select.Item key={item.value} item={item}>
+                    <Select.ItemText>{item.label}</Select.ItemText>
+                    <Select.ItemIndicator>
+                      <CheckIcon />
+                    </Select.ItemIndicator>
+                  </Select.Item>
+                ))}
+              </Select.ItemGroup>
+            </Select.Content>
+          </Select.Positioner>
+        </Select.Root>
+        <Button onClick={() => pushKey({ label: "Vercel", ...accInfo! })}>
+          Add
+        </Button>
+      </HStack>
+      }
+      <HStack>
+        <Button onClick={openVercelPopUp} disabled={loading}>
+          Connect Vercel Account
+        </Button>
       </HStack>
       <Link fontSize={"sm"} href='https://vercel.com/docs/integrations' target="_blank">
         How Vercel Integrations Work
@@ -456,7 +565,7 @@ const GithubImportBox: React.FC<GithubImportBoxProps> = (props) => {
     }, 1000);
   };
 
-  const { data, refetch }
+  const { data, refetch, loading }
     = useQuery<GetLinkedGitHubAccountsQuery>(
     GET_LINKED_GITHUB_ACCOUNTS, { variables: { teamSlug: props.teamSlug } });
 
@@ -473,7 +582,7 @@ const GithubImportBox: React.FC<GithubImportBoxProps> = (props) => {
   };
 
   useEffect(() => {
-    if (accounts === undefined) return;
+    if (accounts === undefined || accounts.length === 0) return;
     fetchRepos(accounts[0].accountName);
   }, [accounts]);
 
@@ -487,7 +596,7 @@ const GithubImportBox: React.FC<GithubImportBoxProps> = (props) => {
         </CardDescription>
       </CardHeader>
       <CardBody gap={"20px"}>
-        { items &&
+        { items !== undefined && items.length > 0 &&
         <HStack>
           <Select.Root
             positioning={{ sameWidth: true }}
@@ -521,7 +630,7 @@ const GithubImportBox: React.FC<GithubImportBoxProps> = (props) => {
           <Input placeholder="Search" />
         </HStack>
         }
-        <Button w="max" onClick={openGithubPopUp}>
+        <Button w="max" onClick={openGithubPopUp} disabled={loading}>
           {"+ Add New GitHub Account"}
         </Button>
         <Stack overflowY={"auto"} maxH={"300px"}>
@@ -554,8 +663,6 @@ const GithubImportBox: React.FC<GithubImportBoxProps> = (props) => {
         ))}
         </Stack>
       </CardBody>
-      <CardFooter>
-      </CardFooter>
     </Card>
   );
 };
