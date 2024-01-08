@@ -13,8 +13,9 @@ import (
 )
 
 const addIntegration = `-- name: AddIntegration :one
-INSERT INTO integration (team_id, integration_name, integration_data, github_installation_id)
-VALUES ($1, $2, $3, $4) RETURNING id, team_id, integration_name, integration_data, github_installation_id
+INSERT INTO integration
+(team_id, integration_name, integration_data, github_installation_id, vercel_installation_id)
+VALUES ($1, $2, $3, $4, $5) RETURNING id, team_id, integration_name, integration_data, github_installation_id, vercel_installation_id
 `
 
 type AddIntegrationParams struct {
@@ -22,6 +23,7 @@ type AddIntegrationParams struct {
 	IntegrationName      IntegrationType
 	IntegrationData      pqtype.NullRawMessage
 	GithubInstallationID sql.NullInt64
+	VercelInstallationID sql.NullString
 }
 
 func (q *Queries) AddIntegration(ctx context.Context, arg AddIntegrationParams) (Integration, error) {
@@ -30,6 +32,7 @@ func (q *Queries) AddIntegration(ctx context.Context, arg AddIntegrationParams) 
 		arg.IntegrationName,
 		arg.IntegrationData,
 		arg.GithubInstallationID,
+		arg.VercelInstallationID,
 	)
 	var i Integration
 	err := row.Scan(
@@ -38,6 +41,7 @@ func (q *Queries) AddIntegration(ctx context.Context, arg AddIntegrationParams) 
 		&i.IntegrationName,
 		&i.IntegrationData,
 		&i.GithubInstallationID,
+		&i.VercelInstallationID,
 	)
 	return i, err
 }
@@ -134,7 +138,7 @@ func (q *Queries) CreateNewTeam(ctx context.Context, arg CreateNewTeamParams) (T
 }
 
 const deleteIntegrationByGitHubInstallationId = `-- name: DeleteIntegrationByGitHubInstallationId :one
-DELETE FROM integration WHERE github_installation_id = $1 RETURNING id, team_id, integration_name, integration_data, github_installation_id
+DELETE FROM integration WHERE github_installation_id = $1 RETURNING id, team_id, integration_name, integration_data, github_installation_id, vercel_installation_id
 `
 
 func (q *Queries) DeleteIntegrationByGitHubInstallationId(ctx context.Context, githubInstallationID sql.NullInt64) (Integration, error) {
@@ -146,12 +150,13 @@ func (q *Queries) DeleteIntegrationByGitHubInstallationId(ctx context.Context, g
 		&i.IntegrationName,
 		&i.IntegrationData,
 		&i.GithubInstallationID,
+		&i.VercelInstallationID,
 	)
 	return i, err
 }
 
 const getIntegrationByTeamIdIntegrationId = `-- name: GetIntegrationByTeamIdIntegrationId :one
-SELECT id, team_id, integration_name, integration_data, github_installation_id FROM integration WHERE team_id = $1 AND id = $2
+SELECT id, team_id, integration_name, integration_data, github_installation_id, vercel_installation_id FROM integration WHERE team_id = $1 AND id = $2
 `
 
 type GetIntegrationByTeamIdIntegrationIdParams struct {
@@ -168,12 +173,13 @@ func (q *Queries) GetIntegrationByTeamIdIntegrationId(ctx context.Context, arg G
 		&i.IntegrationName,
 		&i.IntegrationData,
 		&i.GithubInstallationID,
+		&i.VercelInstallationID,
 	)
 	return i, err
 }
 
 const getIntegrationByTeamIdIntegrationIdIntegrationName = `-- name: GetIntegrationByTeamIdIntegrationIdIntegrationName :one
-SELECT id, team_id, integration_name, integration_data, github_installation_id FROM integration WHERE team_id = $1 AND id = $2 AND integration_name = $3
+SELECT id, team_id, integration_name, integration_data, github_installation_id, vercel_installation_id FROM integration WHERE team_id = $1 AND id = $2 AND integration_name = $3
 `
 
 type GetIntegrationByTeamIdIntegrationIdIntegrationNameParams struct {
@@ -191,12 +197,13 @@ func (q *Queries) GetIntegrationByTeamIdIntegrationIdIntegrationName(ctx context
 		&i.IntegrationName,
 		&i.IntegrationData,
 		&i.GithubInstallationID,
+		&i.VercelInstallationID,
 	)
 	return i, err
 }
 
 const getIntegrationsByTeamId = `-- name: GetIntegrationsByTeamId :many
-SELECT id, team_id, integration_name, integration_data, github_installation_id FROM integration WHERE team_id = $1
+SELECT id, team_id, integration_name, integration_data, github_installation_id, vercel_installation_id FROM integration WHERE team_id = $1
 `
 
 func (q *Queries) GetIntegrationsByTeamId(ctx context.Context, teamID sql.NullInt64) ([]Integration, error) {
@@ -214,6 +221,7 @@ func (q *Queries) GetIntegrationsByTeamId(ctx context.Context, teamID sql.NullIn
 			&i.IntegrationName,
 			&i.IntegrationData,
 			&i.GithubInstallationID,
+			&i.VercelInstallationID,
 		); err != nil {
 			return nil, err
 		}
@@ -229,7 +237,7 @@ func (q *Queries) GetIntegrationsByTeamId(ctx context.Context, teamID sql.NullIn
 }
 
 const getIntegrationsByTeamIdIntegrationName = `-- name: GetIntegrationsByTeamIdIntegrationName :many
-SELECT id, team_id, integration_name, integration_data, github_installation_id FROM integration WHERE team_id = $1 AND integration_name = $2
+SELECT id, team_id, integration_name, integration_data, github_installation_id, vercel_installation_id FROM integration WHERE team_id = $1 AND integration_name = $2
 `
 
 type GetIntegrationsByTeamIdIntegrationNameParams struct {
@@ -252,6 +260,7 @@ func (q *Queries) GetIntegrationsByTeamIdIntegrationName(ctx context.Context, ar
 			&i.IntegrationName,
 			&i.IntegrationData,
 			&i.GithubInstallationID,
+			&i.VercelInstallationID,
 		); err != nil {
 			return nil, err
 		}
@@ -450,7 +459,7 @@ func (q *Queries) GetUserById(ctx context.Context, id int64) (UserInfo, error) {
 }
 
 const updateIntegrationTeamIdByGitHubInstallationId = `-- name: UpdateIntegrationTeamIdByGitHubInstallationId :one
-UPDATE integration SET team_id = $1 WHERE github_installation_id = $2 RETURNING id, team_id, integration_name, integration_data, github_installation_id
+UPDATE integration SET team_id = $1 WHERE github_installation_id = $2 RETURNING id, team_id, integration_name, integration_data, github_installation_id, vercel_installation_id
 `
 
 type UpdateIntegrationTeamIdByGitHubInstallationIdParams struct {
@@ -467,6 +476,7 @@ func (q *Queries) UpdateIntegrationTeamIdByGitHubInstallationId(ctx context.Cont
 		&i.IntegrationName,
 		&i.IntegrationData,
 		&i.GithubInstallationID,
+		&i.VercelInstallationID,
 	)
 	return i, err
 }

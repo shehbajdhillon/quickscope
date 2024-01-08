@@ -57,7 +57,9 @@ type ComplexityRoot struct {
 	Integration struct {
 		AccountName          func(childComplexity int) int
 		GithubInstallationID func(childComplexity int) int
+		ID                   func(childComplexity int) int
 		IntegrationName      func(childComplexity int) int
+		VercelInstallationID func(childComplexity int) int
 	}
 
 	Monitor struct {
@@ -70,6 +72,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		AddGithubInstallationID func(childComplexity int, teamSlug string, installationID int64) int
 		AddIntegration          func(childComplexity int, input model.NewIntegration) int
+		AddVercelIntegration    func(childComplexity int, teamSlug string, vercelToken model.VercelToken) int
 		CreateMonitor           func(childComplexity int, input model.NewMonitor) int
 	}
 
@@ -91,11 +94,13 @@ type IntegrationResolver interface {
 	AccountName(ctx context.Context, obj *database.Integration) (string, error)
 
 	GithubInstallationID(ctx context.Context, obj *database.Integration) (int64, error)
+	VercelInstallationID(ctx context.Context, obj *database.Integration) (string, error)
 }
 type MutationResolver interface {
 	CreateMonitor(ctx context.Context, input model.NewMonitor) (database.Monitor, error)
 	AddIntegration(ctx context.Context, input model.NewIntegration) (database.Integration, error)
 	AddGithubInstallationID(ctx context.Context, teamSlug string, installationID int64) (database.Integration, error)
+	AddVercelIntegration(ctx context.Context, teamSlug string, vercelToken model.VercelToken) (database.Integration, error)
 }
 type QueryResolver interface {
 	Teams(ctx context.Context, teamSlug *string) ([]database.Team, error)
@@ -139,12 +144,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Integration.GithubInstallationID(childComplexity), true
 
+	case "Integration.id":
+		if e.complexity.Integration.ID == nil {
+			break
+		}
+
+		return e.complexity.Integration.ID(childComplexity), true
+
 	case "Integration.integrationName":
 		if e.complexity.Integration.IntegrationName == nil {
 			break
 		}
 
 		return e.complexity.Integration.IntegrationName(childComplexity), true
+
+	case "Integration.vercelInstallationId":
+		if e.complexity.Integration.VercelInstallationID == nil {
+			break
+		}
+
+		return e.complexity.Integration.VercelInstallationID(childComplexity), true
 
 	case "Monitor.id":
 		if e.complexity.Monitor.ID == nil {
@@ -197,6 +216,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AddIntegration(childComplexity, args["input"].(model.NewIntegration)), true
+
+	case "Mutation.addVercelIntegration":
+		if e.complexity.Mutation.AddVercelIntegration == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addVercelIntegration_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddVercelIntegration(childComplexity, args["teamSlug"].(string), args["vercelToken"].(model.VercelToken)), true
 
 	case "Mutation.createMonitor":
 		if e.complexity.Mutation.CreateMonitor == nil {
@@ -284,6 +315,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputNewIntegration,
 		ec.unmarshalInputNewMonitor,
+		ec.unmarshalInputVercelToken,
 	)
 	first := true
 
@@ -452,6 +484,43 @@ func (ec *executionContext) field_Mutation_addIntegration_args(ctx context.Conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_addVercelIntegration_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["teamSlug"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("teamSlug"))
+		directive0 := func(ctx context.Context) (interface{}, error) { return ec.unmarshalNString2string(ctx, tmp) }
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.MemberTeam == nil {
+				return nil, errors.New("directive memberTeam is not implemented")
+			}
+			return ec.directives.MemberTeam(ctx, rawArgs, directive0)
+		}
+
+		tmp, err = directive1(ctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if data, ok := tmp.(string); ok {
+			arg0 = data
+		} else {
+			return nil, graphql.ErrorOnPath(ctx, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp))
+		}
+	}
+	args["teamSlug"] = arg0
+	var arg1 model.VercelToken
+	if tmp, ok := rawArgs["vercelToken"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("vercelToken"))
+		arg1, err = ec.unmarshalNVercelToken2quickscopedevᚋgraphᚋmodelᚐVercelToken(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["vercelToken"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createMonitor_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -589,6 +658,50 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _Integration_id(ctx context.Context, field graphql.CollectedField, obj *database.Integration) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Integration_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Integration_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Integration",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Integration_accountName(ctx context.Context, field graphql.CollectedField, obj *database.Integration) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Integration_accountName(ctx, field)
 	if err != nil {
@@ -716,6 +829,50 @@ func (ec *executionContext) fieldContext_Integration_githubInstallationId(ctx co
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Integration_vercelInstallationId(ctx context.Context, field graphql.CollectedField, obj *database.Integration) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Integration_vercelInstallationId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Integration().VercelInstallationID(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Integration_vercelInstallationId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Integration",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1001,12 +1158,16 @@ func (ec *executionContext) fieldContext_Mutation_addIntegration(ctx context.Con
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "id":
+				return ec.fieldContext_Integration_id(ctx, field)
 			case "accountName":
 				return ec.fieldContext_Integration_accountName(ctx, field)
 			case "integrationName":
 				return ec.fieldContext_Integration_integrationName(ctx, field)
 			case "githubInstallationId":
 				return ec.fieldContext_Integration_githubInstallationId(ctx, field)
+			case "vercelInstallationId":
+				return ec.fieldContext_Integration_vercelInstallationId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Integration", field.Name)
 		},
@@ -1064,12 +1225,16 @@ func (ec *executionContext) fieldContext_Mutation_addGithubInstallationId(ctx co
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "id":
+				return ec.fieldContext_Integration_id(ctx, field)
 			case "accountName":
 				return ec.fieldContext_Integration_accountName(ctx, field)
 			case "integrationName":
 				return ec.fieldContext_Integration_integrationName(ctx, field)
 			case "githubInstallationId":
 				return ec.fieldContext_Integration_githubInstallationId(ctx, field)
+			case "vercelInstallationId":
+				return ec.fieldContext_Integration_vercelInstallationId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Integration", field.Name)
 		},
@@ -1082,6 +1247,73 @@ func (ec *executionContext) fieldContext_Mutation_addGithubInstallationId(ctx co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_addGithubInstallationId_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_addVercelIntegration(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_addVercelIntegration(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddVercelIntegration(rctx, fc.Args["teamSlug"].(string), fc.Args["vercelToken"].(model.VercelToken))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(database.Integration)
+	fc.Result = res
+	return ec.marshalNIntegration2quickscopedevᚋdatabaseᚐIntegration(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_addVercelIntegration(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Integration_id(ctx, field)
+			case "accountName":
+				return ec.fieldContext_Integration_accountName(ctx, field)
+			case "integrationName":
+				return ec.fieldContext_Integration_integrationName(ctx, field)
+			case "githubInstallationId":
+				return ec.fieldContext_Integration_githubInstallationId(ctx, field)
+			case "vercelInstallationId":
+				return ec.fieldContext_Integration_vercelInstallationId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Integration", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_addVercelIntegration_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -1586,12 +1818,16 @@ func (ec *executionContext) fieldContext_Team_integrations(ctx context.Context, 
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "id":
+				return ec.fieldContext_Integration_id(ctx, field)
 			case "accountName":
 				return ec.fieldContext_Integration_accountName(ctx, field)
 			case "integrationName":
 				return ec.fieldContext_Integration_integrationName(ctx, field)
 			case "githubInstallationId":
 				return ec.fieldContext_Integration_githubInstallationId(ctx, field)
+			case "vercelInstallationId":
+				return ec.fieldContext_Integration_vercelInstallationId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Integration", field.Name)
 		},
@@ -3477,6 +3713,68 @@ func (ec *executionContext) unmarshalInputNewMonitor(ctx context.Context, obj in
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputVercelToken(ctx context.Context, obj interface{}) (model.VercelToken, error) {
+	var it model.VercelToken
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"tokenType", "accessToken", "installationId", "userId", "teamId", "accountName"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "tokenType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tokenType"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TokenType = data
+		case "accessToken":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accessToken"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AccessToken = data
+		case "installationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("installationId"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InstallationID = data
+		case "userId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserID = data
+		case "teamId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("teamId"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TeamID = data
+		case "accountName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accountName"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AccountName = data
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -3496,6 +3794,11 @@ func (ec *executionContext) _Integration(ctx context.Context, sel ast.SelectionS
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Integration")
+		case "id":
+			out.Values[i] = ec._Integration_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "accountName":
 			field := field
 
@@ -3547,6 +3850,42 @@ func (ec *executionContext) _Integration(ctx context.Context, sel ast.SelectionS
 					}
 				}()
 				res = ec._Integration_githubInstallationId(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "vercelInstallationId":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Integration_vercelInstallationId(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -3686,6 +4025,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "addGithubInstallationId":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_addGithubInstallationId(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "addVercelIntegration":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_addVercelIntegration(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -4481,6 +4827,11 @@ func (ec *executionContext) marshalNTeam2ᚕquickscopedevᚋdatabaseᚐTeamᚄ(c
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalNVercelToken2quickscopedevᚋgraphᚋmodelᚐVercelToken(ctx context.Context, v interface{}) (model.VercelToken, error) {
+	res, err := ec.unmarshalInputVercelToken(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {

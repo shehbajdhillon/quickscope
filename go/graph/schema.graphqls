@@ -19,6 +19,7 @@ type Mutation {
   createMonitor(input: NewMonitor!): Monitor!
   addIntegration(input: NewIntegration!): Integration!
   addGithubInstallationId(teamSlug: String! @memberTeam, installationId: Int64!): Integration!
+  addVercelIntegration(teamSlug: String! @memberTeam, vercelToken: VercelToken!): Integration!
 }
 
 type Team {
@@ -43,9 +44,11 @@ input NewMonitor {
 }
 
 type Integration {
+  id: Int64!
   accountName: String!
   integrationName: IntegrationType!
   githubInstallationId: Int64!
+  vercelInstallationId: String!
 }
 
 input NewIntegration {
@@ -53,8 +56,18 @@ input NewIntegration {
   integrationName: IntegrationType!
 }
 
+input VercelToken {
+  tokenType: String!
+  accessToken: String!
+  installationId: String!
+  userId: String!
+  teamId: String!
+  accountName: String!
+}
+
 enum IntegrationType {
   GITHUB
   POSTHOG
   RAILWAYAPP
+  VERCEL
 }

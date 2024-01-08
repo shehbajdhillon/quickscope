@@ -15,6 +15,7 @@ import (
 	"quickscopedev/webhooks"
 	"time"
 
+	"github.com/tabbed/pqtype"
 	"go.uber.org/zap"
 )
 
@@ -25,6 +26,13 @@ func (r *integrationResolver) AccountName(ctx context.Context, obj *database.Int
 		json.Unmarshal(obj.IntegrationData.RawMessage, &accountInfo)
 		return accountInfo.AccountName, nil
 	}
+
+	if obj.IntegrationName == database.IntegrationTypeVERCEL {
+		tokenInfo := &model.VercelToken{}
+		json.Unmarshal(obj.IntegrationData.RawMessage, &tokenInfo)
+		return tokenInfo.AccountName, nil
+	}
+
 	return "", nil
 }
 
@@ -34,6 +42,14 @@ func (r *integrationResolver) GithubInstallationID(ctx context.Context, obj *dat
 		return -1, nil
 	}
 	return obj.GithubInstallationID.Int64, nil
+}
+
+// VercelInstallationID is the resolver for the vercelInstallationId field.
+func (r *integrationResolver) VercelInstallationID(ctx context.Context, obj *database.Integration) (string, error) {
+	if obj.VercelInstallationID.Valid == false {
+		return "", nil
+	}
+	return obj.VercelInstallationID.String, nil
 }
 
 // CreateMonitor is the resolver for the createMonitor field.
@@ -71,6 +87,21 @@ func (r *mutationResolver) AddGithubInstallationID(ctx context.Context, teamSlug
 	}
 
 	return database.Integration{}, fmt.Errorf("Could not successfully link GitHub account. Please try again.")
+}
+
+// AddVercelIntegration is the resolver for the addVercelIntegration field.
+func (r *mutationResolver) AddVercelIntegration(ctx context.Context, teamSlug string, vercelToken model.VercelToken) (database.Integration, error) {
+	team, _ := r.Database.GetTeamByTeamSlug(ctx, teamSlug)
+	tokenInfo, _ := json.Marshal(vercelToken)
+
+	integration, err := r.Database.AddIntegration(ctx, database.AddIntegrationParams{
+		TeamID:               sql.NullInt64{Valid: true, Int64: team.ID},
+		IntegrationName:      database.IntegrationTypeVERCEL,
+		IntegrationData:      pqtype.NullRawMessage{Valid: true, RawMessage: tokenInfo},
+		VercelInstallationID: sql.NullString{Valid: true, String: vercelToken.InstallationID},
+	})
+
+	return integration, err
 }
 
 // Teams is the resolver for the teams field.

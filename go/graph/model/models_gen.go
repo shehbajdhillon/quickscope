@@ -15,3 +15,12 @@ type NewMonitor struct {
 	TeamID      int64  `json:"teamId"`
 	MonitorName string `json:"monitorName"`
 }
+
+type VercelToken struct {
+	TokenType      string `json:"tokenType"`
+	AccessToken    string `json:"accessToken"`
+	InstallationID string `json:"installationId"`
+	UserID         string `json:"userId"`
+	TeamID         string `json:"teamId"`
+	AccountName    string `json:"accountName"`
+}

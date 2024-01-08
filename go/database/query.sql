@@ -55,8 +55,9 @@ SELECT * FROM monitor WHERE team_id = $1 ORDER BY created;
 
 
 -- name: AddIntegration :one
-INSERT INTO integration (team_id, integration_name, integration_data, github_installation_id)
-VALUES ($1, $2, $3, $4) RETURNING *;
+INSERT INTO integration
+(team_id, integration_name, integration_data, github_installation_id, vercel_installation_id)
+VALUES ($1, $2, $3, $4, $5) RETURNING *;
 
 -- name: UpdateIntegrationTeamIdByGitHubInstallationId :one
 UPDATE integration SET team_id = $1 WHERE github_installation_id = $2 RETURNING *;

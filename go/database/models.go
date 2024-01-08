@@ -19,6 +19,7 @@ const (
 	IntegrationTypeGITHUB     IntegrationType = "GITHUB"
 	IntegrationTypePOSTHOG    IntegrationType = "POSTHOG"
 	IntegrationTypeRAILWAYAPP IntegrationType = "RAILWAYAPP"
+	IntegrationTypeVERCEL     IntegrationType = "VERCEL"
 )
 
 func (e *IntegrationType) Scan(src interface{}) error {
@@ -147,6 +148,7 @@ type Integration struct {
 	IntegrationName      IntegrationType
 	IntegrationData      pqtype.NullRawMessage
 	GithubInstallationID sql.NullInt64
+	VercelInstallationID sql.NullString
 }
 
 type Monitor struct {

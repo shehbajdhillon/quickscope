@@ -5,7 +5,7 @@ DROP TYPE IF EXISTS membership_type CASCADE;
 CREATE TYPE membership_type AS ENUM ('OWNER', 'ADMIN', 'MEMBER');
 
 DROP TYPE IF EXISTS integration_type CASCADE;
-CREATE TYPE integration_type AS ENUM ('GITHUB', 'POSTHOG', 'RAILWAYAPP');
+CREATE TYPE integration_type AS ENUM ('GITHUB', 'POSTHOG', 'RAILWAYAPP', 'VERCEL');
 
 DROP TABLE IF EXISTS user_info CASCADE;
 CREATE TABLE user_info (
@@ -69,6 +69,7 @@ CREATE TABLE integration (
   team_id BIGINT REFERENCES team (id) ON DELETE CASCADE DEFAULT NULL,
   integration_name INTEGRATION_TYPE NOT NULL,
   integration_data JSONB DEFAULT NULL, -- Includes access, refresh tokens, etc
-  github_installation_id BIGINT UNIQUE DEFAULT NULL -- Only Used for GitHub
+  github_installation_id BIGINT UNIQUE DEFAULT NULL, -- Only Used for GitHub
+  vercel_installation_id TEXT UNIQUE DEFAULT NULL -- Only Used for Vercel
 );
 
